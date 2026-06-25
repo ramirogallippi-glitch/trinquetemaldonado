@@ -36,7 +36,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
 
   return (
     <div style={{
-      position: "relative", minHeight: "100svh", width: "100%", overflow: "hidden",
+      position: "relative", minHeight: "100vh", height: "100vh", width: "100%", overflow: "hidden",
       background: "#0d0d0d", display: "flex", alignItems: "center",
     }}>
       {/* ── FOTO DE FONDO (impecable, sin texto por ahora) ── */}
