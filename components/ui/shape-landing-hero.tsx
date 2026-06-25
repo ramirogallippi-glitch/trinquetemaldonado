@@ -50,7 +50,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       <div style={{
         position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
         background: isMobile
-          ? "linear-gradient(180deg, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.5) 50%, rgba(13,13,13,0.8) 100%)"
+          ? "linear-gradient(180deg, rgba(13,13,13,0.2) 0%, rgba(13,13,13,0.25) 45%, rgba(13,13,13,0.6) 100%)"
           : "none",
       }} />
 
@@ -72,9 +72,9 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           <motion.h1 custom={0} variants={fadeUp} initial="hidden" animate="visible"
             style={{
               fontFamily: oswald, fontWeight: 700, color: "#fff",
-              fontSize: "clamp(42px, 6.5vw, 76px)", lineHeight: 0.98,
+              fontSize: isMobile ? "clamp(58px, 16vw, 74px)" : "clamp(42px, 6.5vw, 76px)", lineHeight: 0.98,
               textTransform: "uppercase", letterSpacing: "0.005em", marginBottom: 22,
-              textShadow: "0 2px 8px rgba(0,0,0,0.85), 0 6px 36px rgba(0,0,0,0.7)",
+              textShadow: "0 2px 14px rgba(0,0,0,0.45)",
             }}>
             Trinquete<br /><span style={{ color: YELLOW }}>Maldonado</span>
           </motion.h1>
@@ -84,7 +84,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
               fontFamily: inter, fontSize: "clamp(13px, 1.6vw, 16px)",
               color: "rgba(255,255,255,0.85)", letterSpacing: "0.04em",
               lineHeight: 1.7, marginBottom: 18, maxWidth: 430,
-              textShadow: "0 2px 8px rgba(0,0,0,0.9), 0 4px 20px rgba(0,0,0,0.7)",
+              textShadow: "0 2px 10px rgba(0,0,0,0.8)",
             }}>
             Gimnasio de buen ambiente para entrenar a tu ritmo. Equipamiento completo y profes que te acompañan en cada paso.
           </motion.p>
