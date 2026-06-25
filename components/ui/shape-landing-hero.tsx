@@ -37,7 +37,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
   return (
     <div style={{
       position: "relative", minHeight: "100vh", height: "100vh", width: "100%", overflow: "hidden",
-      background: "#0d0d0d", display: "flex", alignItems: "center",
+      background: "#0d0d0d", display: "flex", alignItems: isMobile ? "flex-start" : "center",
     }}>
       {/* ── FOTO DE FONDO (impecable, sin texto por ahora) ── */}
       <img src="/hero.png" alt="Cancha de pelota paleta — Trinquete Maldonado"
@@ -64,11 +64,11 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
       <div style={{
         position: "relative", zIndex: 10, width: "100%",
-        padding: isMobile ? "0 24px" : "0 0 0 72px",
+        padding: isMobile ? "92px 24px 0" : "0 0 0 72px",
       }}>
         <motion.div
-          initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ maxWidth: isMobile ? "100%" : 520 }}>
+          initial={{ opacity: 0, x: isMobile ? 0 : -30, y: isMobile ? 20 : 0 }} animate={{ opacity: 1, x: 0, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ maxWidth: isMobile ? "100%" : 520, textAlign: isMobile ? "center" : "left" }}>
           <motion.h1 custom={0} variants={fadeUp} initial="hidden" animate="visible"
             style={{
               fontFamily: oswald, fontWeight: 700, color: "#fff",
@@ -84,6 +84,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
               fontFamily: inter, fontSize: "clamp(13px, 1.6vw, 16px)",
               color: "rgba(255,255,255,0.85)", letterSpacing: "0.04em",
               lineHeight: 1.7, marginBottom: 18, maxWidth: 430,
+              marginLeft: isMobile ? "auto" : 0, marginRight: isMobile ? "auto" : 0,
               textShadow: "0 2px 10px rgba(0,0,0,0.8)",
             }}>
             Gimnasio de buen ambiente para entrenar a tu ritmo. Equipamiento completo y profes que te acompañan en cada paso.
