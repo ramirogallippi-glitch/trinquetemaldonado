@@ -43,8 +43,16 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       <img src="/hero.png" alt="Cancha de pelota paleta — Trinquete Maldonado"
         style={{
           position: "absolute", inset: 0, width: "100%", height: "100%",
-          objectFit: "cover", objectPosition: "center",
+          objectFit: "cover", objectPosition: isMobile ? "65% center" : "center",
         }} />
+
+      {/* oscurecido para legibilidad (más fuerte en mobile) */}
+      <div style={{
+        position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
+        background: isMobile
+          ? "linear-gradient(180deg, rgba(13,13,13,0.55) 0%, rgba(13,13,13,0.5) 50%, rgba(13,13,13,0.8) 100%)"
+          : "none",
+      }} />
 
       {/* tapa la marca de agua (esquina inferior derecha) */}
       <div style={{
@@ -92,21 +100,24 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           </motion.p>
 
           <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible"
-            style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+            style={{ display: "flex", gap: 12, flexWrap: "wrap", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center" }}>
             <button onClick={onPrimary} style={{
-              fontFamily: oswald, fontSize: 15, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: oswald, fontSize: isMobile ? 14 : 15, letterSpacing: "0.06em", textTransform: "uppercase",
               fontWeight: 700, cursor: "pointer", color: "#0A0A0A", background: YELLOW, border: "none",
-              padding: "15px 32px", borderRadius: 6, boxShadow: "0 8px 28px rgba(255,211,0,0.35)",
+              padding: "15px 28px", borderRadius: 6, boxShadow: "0 8px 28px rgba(255,211,0,0.35)",
+              width: isMobile ? "100%" : "auto",
             }}>Sumate a un partido de pelota-paleta</button>
             <button onClick={onSecondary} style={{
-              fontFamily: oswald, fontSize: 15, letterSpacing: "0.06em", textTransform: "uppercase",
-              fontWeight: 700, cursor: "pointer", color: "#fff", background: "rgba(0,0,0,0.35)",
-              border: "2px solid rgba(255,255,255,0.5)", padding: "15px 32px", borderRadius: 6,
+              fontFamily: oswald, fontSize: isMobile ? 14 : 15, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontWeight: 700, cursor: "pointer", color: "#fff", background: "rgba(0,0,0,0.45)",
+              border: "2px solid rgba(255,255,255,0.5)", padding: "15px 28px", borderRadius: 6,
+              width: isMobile ? "100%" : "auto",
             }}>Anotate al gimnasio</button>
             <button onClick={onTertiary} style={{
-              fontFamily: oswald, fontSize: 15, letterSpacing: "0.06em", textTransform: "uppercase",
-              fontWeight: 700, cursor: "pointer", color: "#fff", background: "rgba(0,0,0,0.35)",
-              border: "2px solid rgba(255,255,255,0.5)", padding: "15px 32px", borderRadius: 6,
+              fontFamily: oswald, fontSize: isMobile ? 14 : 15, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontWeight: 700, cursor: "pointer", color: "#fff", background: "rgba(0,0,0,0.45)",
+              border: "2px solid rgba(255,255,255,0.5)", padding: "15px 28px", borderRadius: 6,
+              width: isMobile ? "100%" : "auto",
             }}>Ver servicios</button>
           </motion.div>
         </motion.div>
