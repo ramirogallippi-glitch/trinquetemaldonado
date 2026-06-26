@@ -228,11 +228,8 @@ function ServiciosSection() {
 /* ── Formulario Pelota Paleta → WhatsApp ── */
 const POSICIONES = ["Delantero", "Zaguero"]
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
-// Turnos cada 1 hora, de 9:00 a 21:30
-const TURNOS = [
-  "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
-  "16:00", "17:00", "18:00", "19:00", "20:00", "21:00",
-]
+// Turnos de pelota paleta
+const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 // Planilla de Google (Apps Script) donde se guardan los anotados
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
 
@@ -261,7 +258,7 @@ function PaletaSection() {
       nombre,
       posicion,
       categoria,
-      turnos: turnos.map(t => `${t} hs`).join(", "),
+      turnos: turnos.join(", "),
       fechaJugar: fecha ? fecha.split("-").reverse().join("/") : "",
     }
     try {
@@ -286,7 +283,7 @@ function PaletaSection() {
     const msg =
       `Hola! Quiero anotarme a un partido de pelota paleta.\n` +
       `Nombre: ${nombre}\nPosicion: ${posicion}\nCategoria: ${categoria}\n` +
-      `Fecha: ${fecha ? fecha.split("-").reverse().join("/") : "-"}\nTurnos: ${turnos.map(t => `${t} hs`).join(", ")}`
+      `Fecha: ${fecha ? fecha.split("-").reverse().join("/") : "-"}\nTurnos: ${turnos.join(", ")}`
     window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, "_blank")
   }
 
@@ -346,13 +343,13 @@ function PaletaSection() {
             min={(() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()}
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26, colorScheme: "dark" }} />
 
-          {/* Turnos (cada 1 hora) */}
+          {/* Turnos */}
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Turnos disponibles</label>
-          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Cada turno dura 1 hora. Elegí los que te sirvan.</p>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(5, 1fr)", gap: 8, marginBottom: 28 }}>
+          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Elegí los que te sirvan.</p>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 8, marginBottom: 28 }}>
             {TURNOS.map(t => (
               <button key={t} onClick={() => toggle(turnos, setTurnos, t)}
-                style={{ ...chip(turnos.includes(t)), padding: "11px 6px", fontSize: 14, textAlign: "center", fontFamily: oswald, fontWeight: 600 }}>
+                style={{ ...chip(turnos.includes(t)), padding: "13px 8px", fontSize: 14, textAlign: "center", fontFamily: oswald, fontWeight: 600, whiteSpace: "nowrap" }}>
                 {t}
               </button>
             ))}
