@@ -228,7 +228,6 @@ function ServiciosSection() {
 /* ── Formulario Pelota Paleta → WhatsApp ── */
 const POSICIONES = ["Delantero", "Zaguero"]
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
-const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 // Turnos cada 1 hora, de 9:00 a 21:30
 const TURNOS = [
   "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
@@ -242,7 +241,6 @@ function PaletaSection() {
   const [nombre, setNombre] = useState("")
   const [posicion, setPosicion] = useState("")
   const [categoria, setCategoria] = useState("")
-  const [dias, setDias] = useState<string[]>([])
   const [fecha, setFecha] = useState("")
   const [turnos, setTurnos] = useState<string[]>([])
   const [error, setError] = useState("")
@@ -253,8 +251,8 @@ function PaletaSection() {
     set(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
 
   const enviar = async () => {
-    if (!nombre.trim() || !posicion || !categoria || dias.length === 0 || turnos.length === 0) {
-      setError("Completá tu nombre, posición, categoría y al menos un día y turno.")
+    if (!nombre.trim() || !posicion || !categoria || !fecha || turnos.length === 0) {
+      setError("Completá tu nombre, posición, categoría, la fecha y al menos un turno.")
       return
     }
     setError("")
@@ -263,7 +261,6 @@ function PaletaSection() {
       nombre,
       posicion,
       categoria,
-      dias: dias.join(", "),
       turnos: turnos.map(t => `${t} hs`).join(", "),
       fechaJugar: fecha ? fecha.split("-").reverse().join("/") : "",
     }
@@ -282,14 +279,14 @@ function PaletaSection() {
   }
 
   const resetForm = () => {
-    setNombre(""); setPosicion(""); setCategoria(""); setDias([]); setFecha(""); setTurnos([]); setSent(false)
+    setNombre(""); setPosicion(""); setCategoria(""); setFecha(""); setTurnos([]); setSent(false)
   }
 
   const waBackup = () => {
     const msg =
       `Hola! Quiero anotarme a un partido de pelota paleta.\n` +
       `Nombre: ${nombre}\nPosicion: ${posicion}\nCategoria: ${categoria}\n` +
-      `Dias: ${dias.join(", ")}\nTurnos: ${turnos.map(t => `${t} hs`).join(", ")}`
+      `Fecha: ${fecha ? fecha.split("-").reverse().join("/") : "-"}\nTurnos: ${turnos.map(t => `${t} hs`).join(", ")}`
     window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, "_blank")
   }
 
@@ -342,17 +339,9 @@ function PaletaSection() {
             ))}
           </div>
 
-          {/* Días */}
-          <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Días que podés jugar</label>
-          <div style={{ display: "flex", gap: 8, marginBottom: 26, flexWrap: "wrap" }}>
-            {DIAS.map(d => (
-              <button key={d} onClick={() => toggle(dias, setDias, d)} style={{ ...chip(dias.includes(d)), padding: "9px 14px", fontSize: 13 }}>{isMobile ? d.slice(0,3) : d}</button>
-            ))}
-          </div>
-
           {/* Fecha específica */}
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Fecha que querés jugar</label>
-          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Elegí el día puntual (ej: el martes que viene). Opcional.</p>
+          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Elegí el día puntual (ej: el martes que viene).</p>
           <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
             min={(() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()}
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26, colorScheme: "dark" }} />
