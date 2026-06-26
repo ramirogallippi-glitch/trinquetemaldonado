@@ -388,7 +388,7 @@ function GaleriaSection() {
         {/* Horarios en texto */}
         <div style={{ textAlign: "center", maxWidth: 640, margin: "-26px auto 44px" }}>
           <p style={{ fontFamily: inter, fontSize: isMobile ? 14 : 15.5, color: C.gris, lineHeight: 1.9, marginBottom: 8 }}>
-            🏋️ <strong style={{ color: C.blanco }}>Musculación:</strong> Lunes a Viernes de 8:00 am a 11:00 am. Luego se vuelve a abrir de 15:00 pm a 21:30 pm. Sábados de 8:00 am a 11:00 am. Domingos cerrado.
+            🏋️ <strong style={{ color: C.blanco }}>Musculación:</strong> Lunes a Viernes 8:00AM-11:00AM. Luego se vuelve a abrir 15:00PM-21:30PM. Sábados 8:00AM-11:00AM. Domingos cerrado.
           </p>
           <p style={{ fontFamily: inter, fontSize: isMobile ? 14 : 15.5, color: C.gris, lineHeight: 1.9 }}>
             🚴 <strong style={{ color: C.blanco }}>Spinning:</strong> Consultá los horarios.
