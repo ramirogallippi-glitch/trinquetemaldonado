@@ -383,7 +383,7 @@ function GaleriaSection() {
   return (
     <section id="galeria" style={{ padding: isMobile ? "72px 20px" : "110px 40px", background: C.negro }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <SectionTitle eyebrow="El lugar" title="Conocé el gimnasio" sub="Vení a entrenar y a jugar." />
+        <SectionTitle eyebrow="El lugar" title="Conocé el gimnasio" sub="Vení a entrenar, estamos abiertos en estos horarios:" />
 
         {/* Horarios en texto */}
         <div style={{ textAlign: "center", maxWidth: 640, margin: "-26px auto 44px" }}>
