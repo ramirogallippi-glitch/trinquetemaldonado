@@ -396,7 +396,7 @@ function GaleriaSection() {
         {/* Días y horarios */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
           style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: isMobile ? "24px 20px" : "32px 36px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 9, marginBottom: 22 }}>
             <Clock size={18} color={C.amarillo} />
             <h3 style={{ fontFamily: oswald, fontSize: 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>Días y horarios</h3>
           </div>
