@@ -234,6 +234,8 @@ const TURNOS = [
   "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
   "16:00", "17:00", "18:00", "19:00", "20:00", "21:00",
 ]
+// Planilla de Google (Apps Script) donde se guardan los anotados
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
 
 function PaletaSection() {
   const isMobile = useIsMobile()
@@ -243,24 +245,49 @@ function PaletaSection() {
   const [dias, setDias] = useState<string[]>([])
   const [turnos, setTurnos] = useState<string[]>([])
   const [error, setError] = useState("")
+  const [enviando, setEnviando] = useState(false)
+  const [sent, setSent] = useState(false)
 
   const toggle = (arr: string[], set: (v: string[]) => void, val: string) =>
     set(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
 
-  const enviar = () => {
+  const enviar = async () => {
     if (!nombre.trim() || !posicion || !categoria || dias.length === 0 || turnos.length === 0) {
       setError("Completá tu nombre, posición, categoría y al menos un día y turno.")
       return
     }
     setError("")
+    setEnviando(true)
+    const payload = {
+      nombre,
+      posicion,
+      categoria,
+      dias: dias.join(", "),
+      turnos: turnos.map(t => `${t} hs`).join(", "),
+    }
+    try {
+      await fetch(SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      })
+    } catch (e) {
+      // si fallara, el respaldo de WhatsApp queda disponible abajo
+    }
+    setEnviando(false)
+    setSent(true)
+  }
+
+  const resetForm = () => {
+    setNombre(""); setPosicion(""); setCategoria(""); setDias([]); setTurnos([]); setSent(false)
+  }
+
+  const waBackup = () => {
     const msg =
-      `*NUEVO JUGADOR DISPONIBLE*\n` +
-      `Pelota Paleta - Trinquete Maldonado\n\n` +
-      `Nombre: ${nombre}\n` +
-      `Posicion: ${posicion}\n` +
-      `Categoria: ${categoria}\n` +
-      `Dias: ${dias.join(", ")}\n` +
-      `Turnos: ${turnos.map(t => `${t} hs`).join(", ")}`
+      `Hola! Quiero anotarme a un partido de pelota paleta.\n` +
+      `Nombre: ${nombre}\nPosicion: ${posicion}\nCategoria: ${categoria}\n` +
+      `Dias: ${dias.join(", ")}\nTurnos: ${turnos.map(t => `${t} hs`).join(", ")}`
     window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, "_blank")
   }
 
@@ -276,9 +303,22 @@ function PaletaSection() {
     <section id="paleta" style={{ padding: isMobile ? "72px 20px" : "110px 40px", background: "#111" }}>
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <SectionTitle eyebrow="Cancha de Trinquete" title="Armá tu partido"
-          sub="Anotate con tu posición, categoría y los turnos en los que podés jugar. Te coordinamos el partido por WhatsApp." />
+          sub="Anotate con tu posición, categoría y los turnos en los que podés jugar. Dani coordina el partido y te avisa." />
 
         <div style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 16, padding: isMobile ? 22 : 36 }}>
+          {sent ? (
+            <div style={{ textAlign: "center", padding: isMobile ? "20px 4px" : "30px 10px" }}>
+              <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(255,211,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                <CheckCircle2 size={34} color={C.amarillo} />
+              </div>
+              <h3 style={{ fontFamily: oswald, fontSize: 26, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 12 }}>¡Quedaste anotado!</h3>
+              <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 420, margin: "0 auto 26px" }}>
+                Tu disponibilidad se registró correctamente. Dani te va a contactar para coordinar el partido.
+              </p>
+              <button onClick={resetForm} style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 28px", borderRadius: 8 }}>Anotar otro jugador</button>
+            </div>
+          ) : (
+          <>
           {/* Nombre */}
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu nombre</label>
           <input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Juan Pérez"
@@ -322,16 +362,18 @@ function PaletaSection() {
 
           {error && <p style={{ fontFamily: inter, fontSize: 13, color: "#ff6b6b", marginBottom: 16, textAlign: "center" }}>{error}</p>}
 
-          <button onClick={enviar} style={{
+          <button onClick={enviar} disabled={enviando} style={{
             width: "100%", fontFamily: oswald, fontSize: 17, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
-            cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "16px", borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: "0 8px 28px rgba(255,211,0,0.25)",
+            cursor: enviando ? "default" : "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "16px", borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: "0 8px 28px rgba(255,211,0,0.25)", opacity: enviando ? 0.7 : 1,
           }}>
-            <Send size={18} /> Enviar disponibilidad
+            <Send size={18} /> {enviando ? "Enviando..." : "Anotarme"}
           </button>
           <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, textAlign: "center", marginTop: 14 }}>
-            Se abre WhatsApp con tu mensaje listo para enviar.
+            ¿Algún problema? <span onClick={waBackup} style={{ color: C.amarillo, cursor: "pointer", textDecoration: "underline" }}>Anotate por WhatsApp</span>
           </p>
+          </>
+          )}
         </div>
       </div>
     </section>
