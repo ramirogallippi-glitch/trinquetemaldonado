@@ -414,12 +414,20 @@ function Footer() {
           </div>
 
           <div>
-            <p style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.12em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600, marginBottom: 18 }}>Horarios</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 18 }}>
               <Clock size={15} color={C.amarillo} />
-              <span style={{ fontFamily: inter, fontSize: 14, color: C.gris }}>Lunes a Domingo</span>
+              <p style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.12em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Horarios</p>
             </div>
-            <p style={{ fontFamily: oswald, fontSize: 22, fontWeight: 600, color: C.blanco }}>9:00 – 21:30 hs</p>
+            {[
+              { dia: "Lunes a Viernes", hs: "8:00 – 11:00 · 15:00 – 21:30" },
+              { dia: "Sábados", hs: "8:00 – 11:00" },
+              { dia: "Domingos", hs: "Cerrado" },
+            ].map(({ dia, hs }) => (
+              <div key={dia} style={{ marginBottom: 12 }}>
+                <p style={{ fontFamily: inter, fontSize: 11, color: C.grisTenue, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>{dia}</p>
+                <p style={{ fontFamily: oswald, fontSize: 17, fontWeight: 600, color: hs === "Cerrado" ? C.grisTenue : C.blanco }}>{hs}</p>
+              </div>
+            ))}
           </div>
 
           <div>
