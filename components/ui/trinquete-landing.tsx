@@ -243,6 +243,7 @@ function PaletaSection() {
   const [posicion, setPosicion] = useState("")
   const [categoria, setCategoria] = useState("")
   const [dias, setDias] = useState<string[]>([])
+  const [fecha, setFecha] = useState("")
   const [turnos, setTurnos] = useState<string[]>([])
   const [error, setError] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -264,6 +265,7 @@ function PaletaSection() {
       categoria,
       dias: dias.join(", "),
       turnos: turnos.map(t => `${t} hs`).join(", "),
+      fechaJugar: fecha ? fecha.split("-").reverse().join("/") : "",
     }
     try {
       await fetch(SHEET_URL, {
@@ -280,7 +282,7 @@ function PaletaSection() {
   }
 
   const resetForm = () => {
-    setNombre(""); setPosicion(""); setCategoria(""); setDias([]); setTurnos([]); setSent(false)
+    setNombre(""); setPosicion(""); setCategoria(""); setDias([]); setFecha(""); setTurnos([]); setSent(false)
   }
 
   const waBackup = () => {
@@ -347,6 +349,12 @@ function PaletaSection() {
               <button key={d} onClick={() => toggle(dias, setDias, d)} style={{ ...chip(dias.includes(d)), padding: "9px 14px", fontSize: 13 }}>{isMobile ? d.slice(0,3) : d}</button>
             ))}
           </div>
+
+          {/* Fecha específica */}
+          <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Fecha que querés jugar</label>
+          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Elegí el día puntual (ej: el martes que viene). Opcional.</p>
+          <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
+            style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26, colorScheme: "dark" }} />
 
           {/* Turnos (cada 1 hora) */}
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Turnos disponibles</label>
