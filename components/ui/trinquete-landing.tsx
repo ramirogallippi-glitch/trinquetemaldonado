@@ -354,6 +354,7 @@ function PaletaSection() {
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Fecha que querés jugar</label>
           <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Elegí el día puntual (ej: el martes que viene). Opcional.</p>
           <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
+            min={(() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()}
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26, colorScheme: "dark" }} />
 
           {/* Turnos (cada 1 hora) */}
