@@ -383,8 +383,8 @@ function GaleriaSection() {
   return (
     <section id="galeria" style={{ padding: isMobile ? "72px 20px" : "110px 40px", background: C.negro }}>
       <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-        <SectionTitle eyebrow="El lugar" title="Conocé el gimnasio" sub="Vení a conocernos." />
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10 }}>
+        <SectionTitle eyebrow="El lugar" title="Conocé el gimnasio" sub="Vení a entrenar y a jugar. Estos son nuestros días y horarios." />
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10, marginBottom: 28 }}>
           {fotos.map((f, i) => (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.05 }}
               style={{ aspectRatio: "3/4", overflow: "hidden", borderRadius: 10, border: `1px solid ${C.cardBorde}` }}>
@@ -392,6 +392,32 @@ function GaleriaSection() {
             </motion.div>
           ))}
         </div>
+
+        {/* Días y horarios */}
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: isMobile ? "24px 20px" : "32px 36px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 22 }}>
+            <Clock size={18} color={C.amarillo} />
+            <h3 style={{ fontFamily: oswald, fontSize: 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>Días y horarios</h3>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 18 : 24 }}>
+            {[
+              { icon: Dumbbell, nombre: "Musculación", lineas: ["Lun a Vie: 8 – 11 y 15 – 21:30 hs", "Sábados: 8 – 11 hs", "Domingos: cerrado"] },
+              { icon: Target, nombre: "Pelota Paleta", lineas: ["Lunes y Viernes", "17:30 – 19:00 hs", "19:00 – 20:30 hs", "20:30 – 22:00 hs"] },
+              { icon: Bike, nombre: "Spinning", lineas: ["Consultá los horarios"] },
+            ].map(({ icon: Icon, nombre, lineas }) => (
+              <div key={nombre}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
+                  <Icon size={20} color={C.amarillo} strokeWidth={1.8} />
+                  <p style={{ fontFamily: oswald, fontSize: 18, fontWeight: 600, textTransform: "uppercase", color: C.amarillo }}>{nombre}</p>
+                </div>
+                {lineas.map(l => (
+                  <p key={l} style={{ fontFamily: inter, fontSize: 13.5, color: C.gris, lineHeight: 1.7 }}>{l}</p>
+                ))}
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   )
