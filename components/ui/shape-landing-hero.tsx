@@ -87,12 +87,18 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           : "none",
       }} />
 
-      {/* tapa la marca de agua (esquina inferior derecha) */}
+      {/* Sello del Trinquete: tapa la marca de agua de Gemini (esquina inf. derecha) */}
+      <div style={{ position: "absolute", bottom: 0, right: 0, width: 220, height: 70, zIndex: 3,
+        background: "linear-gradient(to top left, rgba(13,13,13,0.92) 30%, transparent 100%)", pointerEvents: "none" }} />
       <div style={{
-        position: "absolute", bottom: 0, right: 0, width: 200, height: 80, zIndex: 3,
-        background: "linear-gradient(to top left, rgba(13,13,13,0.96) 35%, transparent 100%)",
-        pointerEvents: "none",
-      }} />
+        position: "absolute", bottom: 12, right: 14, zIndex: 4, pointerEvents: "none",
+        background: "rgba(13,13,13,0.9)", borderRadius: 7, padding: "7px 13px",
+        border: `1px solid ${YELLOW}66`,
+        fontFamily: "'Anton', sans-serif", fontSize: 14, letterSpacing: "0.02em",
+        textTransform: "uppercase", lineHeight: 1, color: "#fff", whiteSpace: "nowrap",
+      }}>
+        Trinquete <span style={{ color: YELLOW }}>Maldonado</span>
+      </div>
 
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
       <div style={{
