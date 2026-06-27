@@ -236,6 +236,7 @@ const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtp
 function PaletaSection() {
   const isMobile = useIsMobile()
   const [nombre, setNombre] = useState("")
+  const [telefono, setTelefono] = useState("")
   const [posicion, setPosicion] = useState("")
   const [categoria, setCategoria] = useState("")
   const [fecha, setFecha] = useState("")
@@ -248,14 +249,15 @@ function PaletaSection() {
     set(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
 
   const enviar = async () => {
-    if (!nombre.trim() || !posicion || !categoria || !fecha || turnos.length === 0) {
-      setError("Completá tu nombre, posición, categoría, la fecha y al menos un turno.")
+    if (!nombre.trim() || !telefono.trim() || !posicion || !categoria || !fecha || turnos.length === 0) {
+      setError("Completá tu nombre, teléfono, posición, categoría, la fecha y al menos un turno.")
       return
     }
     setError("")
     setEnviando(true)
     const payload = {
       nombre,
+      telefono,
       posicion,
       categoria,
       turnos: turnos.join(", "),
@@ -276,13 +278,13 @@ function PaletaSection() {
   }
 
   const resetForm = () => {
-    setNombre(""); setPosicion(""); setCategoria(""); setFecha(""); setTurnos([]); setSent(false)
+    setNombre(""); setTelefono(""); setPosicion(""); setCategoria(""); setFecha(""); setTurnos([]); setSent(false)
   }
 
   const waBackup = () => {
     const msg =
       `Hola! Quiero anotarme a un partido de pelota paleta.\n` +
-      `Nombre: ${nombre}\nPosicion: ${posicion}\nCategoria: ${categoria}\n` +
+      `Nombre: ${nombre}\nTelefono: ${telefono}\nPosicion: ${posicion}\nCategoria: ${categoria}\n` +
       `Fecha: ${fecha ? fecha.split("-").reverse().join("/") : "-"}\nTurnos: ${turnos.join(", ")}`
     window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, "_blank")
   }
@@ -318,6 +320,11 @@ function PaletaSection() {
           {/* Nombre */}
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu nombre</label>
           <input value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Juan Pérez"
+            style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26 }} />
+
+          {/* Teléfono */}
+          <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu teléfono</label>
+          <input value={telefono} onChange={e => setTelefono(e.target.value)} type="tel" inputMode="tel" placeholder="Ej: 11 4162-6719"
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26 }} />
 
           {/* Posición */}
