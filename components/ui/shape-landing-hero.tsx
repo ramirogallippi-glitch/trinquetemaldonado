@@ -66,7 +66,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
-            transform: "scale(1.18)", transformOrigin: "left top",
+            transform: "scale(1.24)", transformOrigin: "left top",
             filter: "grayscale(1) contrast(1.08) brightness(0.95)",
           }}
         >
@@ -77,7 +77,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
-            transform: "scale(1.1)", transformOrigin: "left top",
+            transform: "scale(1.14)", transformOrigin: "left top",
           }} />
       )}
 
@@ -89,13 +89,15 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           : "none",
       }} />
 
-      {/* Logo del Trinquete: tapa la marca de agua de Gemini (pegado a la esquina inf. derecha) */}
+      {/* Logo del Trinquete (cuadrado, separado de los bordes) */}
       <div style={{
-        position: "absolute", bottom: 0, right: 0, zIndex: 4, pointerEvents: "none",
-        background: "#fff", borderTopLeftRadius: 14, padding: isMobile ? "30px 26px" : "34px 32px",
-        boxShadow: "0 0 24px rgba(0,0,0,0.4)",
+        position: "absolute", bottom: isMobile ? 16 : 22, right: isMobile ? 16 : 22, zIndex: 4, pointerEvents: "none",
+        width: isMobile ? 92 : 110, height: isMobile ? 92 : 110,
+        background: "#fff", borderRadius: 12,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 6px 22px rgba(0,0,0,0.4)",
       }}>
-        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 60 : 70, width: "auto", display: "block" }} />
+        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: "84%", width: "84%", objectFit: "contain", display: "block" }} />
       </div>
 
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
