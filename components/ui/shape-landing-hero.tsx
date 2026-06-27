@@ -93,7 +93,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       <div style={{
         position: "absolute", bottom: isMobile ? 16 : 22, right: isMobile ? 16 : 22, zIndex: 4, pointerEvents: "none",
         width: isMobile ? 92 : 110, height: isMobile ? 92 : 110,
-        background: "#fff", borderRadius: 12,
+        background: "#fff", borderRadius: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
         boxShadow: "0 6px 22px rgba(0,0,0,0.4)",
       }}>
