@@ -78,7 +78,7 @@ function Navbar() {
         <div style={{ position: "relative", padding: isMobile ? "0 20px" : "0 40px", height: isMobile ? 56 : 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {/* Logo */}
           <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, zIndex: 2, display: "flex", alignItems: "center" }}>
-            <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 40 : 48, width: "auto", display: "block" }} />
+            <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 34 : 48, width: "auto", display: "block" }} />
           </button>
 
           {!isMobile ? (
@@ -98,26 +98,15 @@ function Navbar() {
                 onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>Anotarme</button>
             </>
           ) : (
-            <button onClick={() => setOpen(o => !o)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, padding: 4, zIndex: 2 }}>
-              {[0,1,2].map(i => (
-                <span key={i} style={{ display: "block", width: 24, height: 2.5, background: C.negro, transition: "all 0.3s",
-                  transform: open ? (i===0 ? "rotate(45deg) translate(4px,4px)" : i===2 ? "rotate(-45deg) translate(5px,-5px)" : "scaleX(0)") : "none" }} />
+            /* Links visibles en mobile */
+            <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {links.map(l => (
+                <button key={l.id} onClick={() => go(l.id)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.01em", color: C.negro, padding: "6px 5px" }}>{l.label}</button>
               ))}
-            </button>
+            </div>
           )}
         </div>
       </nav>
-
-      {isMobile && open && (
-        <div style={{ position: "fixed", top: 59, left: 0, right: 0, zIndex: 49, background: "#FFFFFF", borderBottom: `3px solid ${C.amarillo}`, boxShadow: "0 8px 20px rgba(0,0,0,0.15)", padding: "6px 0 18px" }}>
-          {links.map(l => (
-            <button key={l.id} onClick={() => go(l.id)} style={{ display: "block", width: "100%", padding: "13px 24px", background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: 19, fontWeight: 600, textTransform: "uppercase", color: C.negro, textAlign: "left" }}>{l.label}</button>
-          ))}
-          <div style={{ padding: "12px 24px 0" }}>
-            <button onClick={() => go("paleta")} style={{ width: "100%", fontFamily: oswald, fontSize: 17, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "14px", borderRadius: 6 }}>Anotarme a jugar</button>
-          </div>
-        </div>
-      )}
     </>
   )
 }
