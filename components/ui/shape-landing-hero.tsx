@@ -66,7 +66,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
-            transform: "scale(1.12)", transformOrigin: "center center",
+            transform: "scale(1.18)", transformOrigin: "left top",
             filter: "grayscale(1) contrast(1.08) brightness(0.95)",
           }}
         >
@@ -77,7 +77,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
-            transform: "scale(1.08)", transformOrigin: "center center",
+            transform: "scale(1.1)", transformOrigin: "left top",
           }} />
       )}
 
@@ -92,10 +92,10 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       {/* Logo del Trinquete: tapa la marca de agua de Gemini (pegado a la esquina inf. derecha) */}
       <div style={{
         position: "absolute", bottom: 0, right: 0, zIndex: 4, pointerEvents: "none",
-        background: "#fff", borderTopLeftRadius: 12, padding: isMobile ? "14px 20px" : "16px 26px",
+        background: "#fff", borderTopLeftRadius: 14, padding: isMobile ? "30px 26px" : "34px 32px",
         boxShadow: "0 0 24px rgba(0,0,0,0.4)",
       }}>
-        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 64 : 74, width: "auto", display: "block" }} />
+        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 60 : 70, width: "auto", display: "block" }} />
       </div>
 
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
