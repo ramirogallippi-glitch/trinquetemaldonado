@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 
 const YELLOW = "#FFD300"
@@ -25,6 +25,21 @@ interface HeroProps {
 
 export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps) {
   const isMobile = useIsMobile()
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const vid = videoRef.current
+    if (!vid) return
+    vid.muted = true
+    const attempt = () => vid.play().catch(() => {})
+    attempt()
+    document.addEventListener("touchstart", attempt, { once: true })
+    document.addEventListener("click", attempt, { once: true })
+    return () => {
+      document.removeEventListener("touchstart", attempt)
+      document.removeEventListener("click", attempt)
+    }
+  }, [isMobile])
 
   const fadeUp = {
     hidden: { opacity: 0, y: 28 },
@@ -39,12 +54,28 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       position: "relative", minHeight: "100vh", height: "100vh", width: "100%", overflow: "hidden",
       background: "#0d0d0d", display: "flex", alignItems: isMobile ? "flex-start" : "center",
     }}>
-      {/* ── FOTO DE FONDO (impecable, sin texto por ahora) ── */}
-      <img src="/hero.png" alt="Cancha de pelota paleta — Trinquete Maldonado"
-        style={{
-          position: "absolute", inset: 0, width: "100%", height: "100%",
-          objectFit: "cover", objectPosition: isMobile ? "65% center" : "center",
-        }} />
+      {/* ── FONDO: video en celular, imagen en PC ── */}
+      {isMobile ? (
+        <video
+          ref={videoRef}
+          autoPlay muted loop playsInline preload="auto"
+          poster="/hero.png"
+          {...{ "webkit-playsinline": "true" } as any}
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", objectPosition: "center",
+            filter: "grayscale(1) contrast(1.08) brightness(0.95)",
+          }}
+        >
+          <source src="/hero-mobile.mp4" type="video/mp4" />
+        </video>
+      ) : (
+        <img src="/hero.png" alt="Cancha de pelota paleta — Trinquete Maldonado"
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", objectPosition: "center",
+          }} />
+      )}
 
       {/* oscurecido para legibilidad (más fuerte en mobile) */}
       <div style={{
