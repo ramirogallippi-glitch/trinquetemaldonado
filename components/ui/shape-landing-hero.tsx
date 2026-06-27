@@ -52,7 +52,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
   return (
     <div style={{
       position: "relative",
-      minHeight: isMobile ? "auto" : "100vh", height: isMobile ? "auto" : "100vh",
+      minHeight: isMobile ? "82vh" : "100vh", height: isMobile ? "auto" : "100vh",
       width: "100%", overflow: "hidden",
       background: "#0d0d0d", display: "flex", alignItems: isMobile ? "flex-start" : "center",
     }}>
@@ -104,9 +104,9 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{ maxWidth: isMobile ? "100%" : 520, textAlign: isMobile ? "center" : "left" }}>
           <motion.h1 custom={0} variants={fadeUp} initial="hidden" animate="visible"
             style={{
-              fontFamily: inter, fontWeight: 800, color: "#fff",
-              fontSize: isMobile ? "clamp(52px, 15vw, 70px)" : "clamp(42px, 6.5vw, 76px)", lineHeight: 1.0,
-              letterSpacing: "-0.02em", marginBottom: 22,
+              fontFamily: "'Anton', sans-serif", fontWeight: 400, color: "#fff",
+              fontSize: isMobile ? "clamp(56px, 16vw, 74px)" : "clamp(46px, 7vw, 84px)", lineHeight: 1.0,
+              textTransform: "uppercase", letterSpacing: "0.01em", marginBottom: 22,
               textShadow: "0 2px 14px rgba(0,0,0,0.45)",
             }}>
             Trinquete<br /><span style={{ color: YELLOW }}>Maldonado</span>
