@@ -52,7 +52,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
   return (
     <div style={{
       position: "relative",
-      minHeight: isMobile ? "90vh" : "100vh", height: isMobile ? "auto" : "100vh",
+      minHeight: isMobile ? "95vh" : "100vh", height: isMobile ? "auto" : "100vh",
       width: "100%", overflow: "hidden",
       background: "#0d0d0d", display: "flex", alignItems: isMobile ? "flex-start" : "center",
     }}>
@@ -66,6 +66,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
+            transform: "scale(1.12)", transformOrigin: "center center",
             filter: "grayscale(1) contrast(1.08) brightness(0.95)",
           }}
         >
@@ -76,6 +77,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
+            transform: "scale(1.08)", transformOrigin: "center center",
           }} />
       )}
 
@@ -90,10 +92,10 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       {/* Logo del Trinquete: tapa la marca de agua de Gemini (pegado a la esquina inf. derecha) */}
       <div style={{
         position: "absolute", bottom: 0, right: 0, zIndex: 4, pointerEvents: "none",
-        background: "#fff", borderTopLeftRadius: 12, padding: isMobile ? "12px 18px" : "14px 22px",
+        background: "#fff", borderTopLeftRadius: 12, padding: isMobile ? "14px 20px" : "16px 26px",
         boxShadow: "0 0 24px rgba(0,0,0,0.4)",
       }}>
-        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 48 : 56, width: "auto", display: "block" }} />
+        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 64 : 74, width: "auto", display: "block" }} />
       </div>
 
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
