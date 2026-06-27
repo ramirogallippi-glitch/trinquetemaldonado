@@ -51,7 +51,9 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
 
   return (
     <div style={{
-      position: "relative", minHeight: "100vh", height: "100vh", width: "100%", overflow: "hidden",
+      position: "relative",
+      minHeight: isMobile ? "auto" : "100vh", height: isMobile ? "auto" : "100vh",
+      width: "100%", overflow: "hidden",
       background: "#0d0d0d", display: "flex", alignItems: isMobile ? "flex-start" : "center",
     }}>
       {/* ── FONDO: video en celular, imagen en PC ── */}
@@ -81,7 +83,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       <div style={{
         position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
         background: isMobile
-          ? "linear-gradient(180deg, rgba(13,13,13,0.2) 0%, rgba(13,13,13,0.25) 45%, rgba(13,13,13,0.6) 100%)"
+          ? "linear-gradient(180deg, rgba(13,13,13,0.1) 0%, rgba(13,13,13,0.1) 50%, rgba(13,13,13,0.4) 100%)"
           : "none",
       }} />
 
@@ -95,16 +97,16 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
       <div style={{
         position: "relative", zIndex: 10, width: "100%",
-        padding: isMobile ? "92px 24px 0" : "0 0 0 72px",
+        padding: isMobile ? "96px 24px 64px" : "0 0 0 72px",
       }}>
         <motion.div
           initial={{ opacity: 0, x: isMobile ? 0 : -30, y: isMobile ? 20 : 0 }} animate={{ opacity: 1, x: 0, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}
           style={{ maxWidth: isMobile ? "100%" : 520, textAlign: isMobile ? "center" : "left" }}>
           <motion.h1 custom={0} variants={fadeUp} initial="hidden" animate="visible"
             style={{
-              fontFamily: oswald, fontWeight: 700, color: "#fff",
-              fontSize: isMobile ? "clamp(58px, 16vw, 74px)" : "clamp(42px, 6.5vw, 76px)", lineHeight: 0.98,
-              textTransform: "uppercase", letterSpacing: "0.005em", marginBottom: 22,
+              fontFamily: inter, fontWeight: 800, color: "#fff",
+              fontSize: isMobile ? "clamp(52px, 15vw, 70px)" : "clamp(42px, 6.5vw, 76px)", lineHeight: 1.0,
+              letterSpacing: "-0.02em", marginBottom: 22,
               textShadow: "0 2px 14px rgba(0,0,0,0.45)",
             }}>
             Trinquete<br /><span style={{ color: YELLOW }}>Maldonado</span>
