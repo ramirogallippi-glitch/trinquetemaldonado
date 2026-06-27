@@ -87,13 +87,13 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           : "none",
       }} />
 
-      {/* Logo del Trinquete: tapa la marca de agua de Gemini (esquina inf. derecha) */}
+      {/* Logo del Trinquete: tapa la marca de agua de Gemini (pegado a la esquina inf. derecha) */}
       <div style={{
-        position: "absolute", bottom: 12, right: 12, zIndex: 4, pointerEvents: "none",
-        background: "#fff", borderRadius: 8, padding: "6px 10px",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
+        position: "absolute", bottom: 0, right: 0, zIndex: 4, pointerEvents: "none",
+        background: "#fff", borderTopLeftRadius: 12, padding: isMobile ? "12px 18px" : "14px 22px",
+        boxShadow: "0 0 24px rgba(0,0,0,0.4)",
       }}>
-        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 42 : 48, width: "auto", display: "block" }} />
+        <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 48 : 56, width: "auto", display: "block" }} />
       </div>
 
       {/* ── CONTENIDO (texto bien a la izquierda) ── */}
