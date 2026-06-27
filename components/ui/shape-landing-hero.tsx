@@ -52,7 +52,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
   return (
     <div style={{
       position: "relative",
-      minHeight: isMobile ? "82vh" : "100vh", height: isMobile ? "auto" : "100vh",
+      minHeight: isMobile ? "90vh" : "100vh", height: isMobile ? "auto" : "100vh",
       width: "100%", overflow: "hidden",
       background: "#0d0d0d", display: "flex", alignItems: isMobile ? "flex-start" : "center",
     }}>
