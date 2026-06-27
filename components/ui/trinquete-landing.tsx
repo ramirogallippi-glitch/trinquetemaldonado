@@ -77,10 +77,8 @@ function Navbar() {
       }}>
         <div style={{ position: "relative", padding: isMobile ? "0 20px" : "0 40px", height: isMobile ? 56 : 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {/* Logo */}
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, zIndex: 2 }}>
-            <span style={{ fontFamily: oswald, fontWeight: 700, fontSize: isMobile ? 18 : 21, textTransform: "uppercase", lineHeight: 1, color: C.negro, letterSpacing: "0.01em" }}>
-              Trinquete <span style={{ color: C.amarillo }}>Maldonado</span>
-            </span>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, zIndex: 2, display: "flex", alignItems: "center" }}>
+            <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 40 : 48, width: "auto", display: "block" }} />
           </button>
 
           {!isMobile ? (
