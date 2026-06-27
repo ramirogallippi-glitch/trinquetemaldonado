@@ -75,35 +75,19 @@ function Navbar() {
         boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.15)" : "none",
         transition: "box-shadow 0.35s ease",
       }}>
-        <div style={{ position: "relative", padding: isMobile ? "0 20px" : "0 40px", height: isMobile ? 56 : 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Logo */}
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, zIndex: 2, display: "flex", alignItems: "center" }}>
-            <img src="/logo.png" alt="Trinquete Maldonado" style={{ height: isMobile ? 34 : 48, width: "auto", display: "block" }} />
-          </button>
+        <div style={{ position: "relative", padding: isMobile ? "0 16px" : "0 40px", height: isMobile ? 56 : 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {/* Links centrados */}
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 6 }}>
+            {links.map(l => (
+              <button key={l.id} onClick={() => go(l.id)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: isMobile ? 12 : 15, fontWeight: 600, textTransform: "uppercase", letterSpacing: isMobile ? "0.01em" : "0.04em", color: C.negro, padding: isMobile ? "6px 7px" : "8px 16px", transition: "color 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.color = C.amarillo}
+                onMouseLeave={e => e.currentTarget.style.color = C.negro}>{l.label}</button>
+            ))}
+          </div>
 
-          {!isMobile ? (
-            <>
-              {/* Links centrados */}
-              <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", display: "flex", alignItems: "center", gap: 6 }}>
-                {links.map(l => (
-                  <button key={l.id} onClick={() => go(l.id)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: 15, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", color: C.negro, padding: "8px 16px", transition: "color 0.2s" }}
-                    onMouseEnter={e => e.currentTarget.style.color = C.amarillo}
-                    onMouseLeave={e => e.currentTarget.style.color = C.negro}>{l.label}</button>
-                ))}
-              </div>
-
-              {/* Botón Anotarme (amarillo para resaltar sobre el blanco) */}
-              <button onClick={() => go("paleta")} style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 26px", borderRadius: 6, zIndex: 2, transition: "transform 0.15s", boxShadow: "0 4px 14px rgba(255,211,0,0.45)" }}
-                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>Anotarme</button>
-            </>
-          ) : (
-            /* Links visibles en mobile */
-            <div style={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {links.map(l => (
-                <button key={l.id} onClick={() => go(l.id)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.01em", color: C.negro, padding: "6px 5px" }}>{l.label}</button>
-              ))}
-            </div>
+          {/* Botón Anotarme a la derecha (solo desktop) */}
+          {!isMobile && (
+            <button onClick={() => go("paleta")} style={{ position: "absolute", right: 40, top: "50%", transform: "translateY(-50%)", fontFamily: oswald, fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 26px", borderRadius: 6, boxShadow: "0 4px 14px rgba(255,211,0,0.45)" }}>Anotarme</button>
           )}
         </div>
       </nav>
