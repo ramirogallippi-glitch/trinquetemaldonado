@@ -215,12 +215,13 @@ export default function DesafiosPage() {
               <div key={i} style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22,
                 display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: 16 }}>
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                     <span style={{ fontFamily: oswald, fontSize: isMobile ? 19 : 21, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>
                       {d.jugador1} <span style={{ color: C.amarillo }}>&</span> {d.jugador2}
                     </span>
                     <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.amarillo, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase" }}>{d.categoria}</span>
                   </div>
+                  <p style={{ fontFamily: inter, fontSize: 12.5, color: C.amarillo, marginBottom: 10, fontWeight: 500 }}>Esperando una dupla que los desafíe 🎾</p>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}>
                       <Calendar size={15} color={C.amarillo} /> {d.fecha}
@@ -235,7 +236,7 @@ export default function DesafiosPage() {
                   cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 22px", borderRadius: 8,
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8, whiteSpace: "nowrap",
                 }}>
-                  <Swords size={16} /> Aceptar desafío
+                  <Swords size={16} /> Unirse / Aceptar
                 </button>
               </div>
             ))}
