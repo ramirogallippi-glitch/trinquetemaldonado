@@ -61,10 +61,14 @@ function Navbar() {
   const links = [
     { label: "Servicios", id: "servicios" },
     { label: "Paleta", id: "paleta" },
+    { label: "Desafíos", id: "desafios", href: "/desafios" },
     { label: "Galería", id: "galeria" },
     { label: "Contacto", id: "contacto" },
   ]
-  const go = (id: string) => { scrollTo(id); setOpen(false) }
+  const go = (id: string, href?: string) => {
+    if (href) { window.location.href = href; return }
+    scrollTo(id); setOpen(false)
+  }
 
   return (
     <>
@@ -77,11 +81,11 @@ function Navbar() {
       }}>
         <div style={{ position: "relative", padding: isMobile ? "0 16px" : "0 40px", height: isMobile ? 56 : 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
           {/* Links centrados */}
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 2 : 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 4 }}>
             {links.map(l => (
-              <button key={l.id} onClick={() => go(l.id)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: isMobile ? 12 : 15, fontWeight: 600, textTransform: "uppercase", letterSpacing: isMobile ? "0.01em" : "0.04em", color: C.negro, padding: isMobile ? "6px 7px" : "8px 16px", transition: "color 0.2s" }}
+              <button key={l.id} onClick={() => go(l.id, (l as any).href)} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: oswald, fontSize: isMobile ? 10.5 : 15, fontWeight: 600, textTransform: "uppercase", letterSpacing: isMobile ? "0.005em" : "0.04em", color: (l as any).href ? C.amarillo : C.negro, padding: isMobile ? "6px 5px" : "8px 14px", transition: "color 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.color = C.amarillo}
-                onMouseLeave={e => e.currentTarget.style.color = C.negro}>{l.label}</button>
+                onMouseLeave={e => e.currentTarget.style.color = (l as any).href ? C.amarillo : C.negro}>{l.label}</button>
             ))}
           </div>
 
