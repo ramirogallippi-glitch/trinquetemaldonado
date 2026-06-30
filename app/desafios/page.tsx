@@ -23,6 +23,8 @@ const DESAFIOS_URL = "https://script.google.com/macros/s/AKfycbz_-Q9pCsMEtCJZ8UN
 
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
+// Número de WhatsApp de Dani (cambiar por el real cuando lo tengan)
+const DANI_WA = "5491141626719"
 
 interface Desafio {
   id: string
@@ -124,6 +126,13 @@ export default function DesafiosPage() {
     } catch (e) {}
     // optimista: marco el partido como completo
     setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
+    // aviso a Dani por WhatsApp (lo manda el que acepta)
+    const msg =
+      `Hola! Se armó un partido de pelota paleta 🎾\n` +
+      `${d.jugador1} y ${d.jugador2} VS ${rival1} y ${rival2}\n` +
+      `Categoría: ${d.categoria}\n` +
+      `Fecha: ${d.fecha} · Turno: ${d.turno}`
+    window.open(`https://wa.me/${DANI_WA}?text=${encodeURIComponent(msg)}`, "_blank")
     setAceptandoId(null); setRival1(""); setRival2("")
     setTimeout(cargarDesafios, 2000)
   }
