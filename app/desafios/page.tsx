@@ -62,7 +62,6 @@ export default function DesafiosPage() {
   const [enviando, setEnviando] = useState(false)
 
   const cargarDesafios = () => {
-    if (DESAFIOS_URL === "PEGAR_URL_ACA") { setCargando(false); return }
     fetch(DESAFIOS_URL)
       .then(r => r.json())
       .then((data) => { if (Array.isArray(data)) setDesafios(data) })
