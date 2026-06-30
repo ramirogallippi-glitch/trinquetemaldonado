@@ -30,7 +30,8 @@ interface Desafio {
   categoria: string
   fecha: string   // DD/MM/YYYY
   turno: string
-  telefono: string
+  telefono1: string
+  telefono2: string
 }
 
 function useIsMobile() {
@@ -55,7 +56,8 @@ export default function DesafiosPage() {
   const [categoria, setCategoria] = useState("")
   const [fecha, setFecha] = useState("")
   const [turno, setTurno] = useState("")
-  const [telefono, setTelefono] = useState("")
+  const [telefono1, setTelefono1] = useState("")
+  const [telefono2, setTelefono2] = useState("")
   const [error, setError] = useState("")
   const [enviando, setEnviando] = useState(false)
 
@@ -73,14 +75,14 @@ export default function DesafiosPage() {
   const hoyStr = (() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()
 
   const publicar = async () => {
-    if (!j1.trim() || !j2.trim() || !categoria || !fecha || !turno || !telefono.trim()) {
-      setError("Completá los dos jugadores, categoría, fecha, turno y un teléfono de contacto.")
+    if (!j1.trim() || !j2.trim() || !categoria || !fecha || !turno || !telefono1.trim() || !telefono2.trim()) {
+      setError("Completá los dos jugadores con sus teléfonos, categoría, fecha y turno.")
       return
     }
     setError("")
     setEnviando(true)
     const fechaFmt = fecha.split("-").reverse().join("/")
-    const payload: Desafio = { jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono }
+    const payload: Desafio = { jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2 }
     try {
       await fetch(DESAFIOS_URL, {
         method: "POST", mode: "no-cors",
@@ -92,13 +94,13 @@ export default function DesafiosPage() {
     setDesafios(prev => [payload, ...prev])
     setEnviando(false)
     setShowForm(false)
-    setJ1(""); setJ2(""); setCategoria(""); setFecha(""); setTurno(""); setTelefono("")
+    setJ1(""); setJ2(""); setCategoria(""); setFecha(""); setTurno(""); setTelefono1(""); setTelefono2("")
     // y re-sincronizo con la planilla
     setTimeout(cargarDesafios, 2000)
   }
 
   const aceptar = (d: Desafio) => {
-    const tel = d.telefono.replace(/[^0-9]/g, "")
+    const tel = (d.telefono1 || d.telefono2 || "").replace(/[^0-9]/g, "")
     const wa = tel.startsWith("54") ? tel : `549${tel.replace(/^0/, "")}`
     const msg = `Hola! Aceptamos el desafío de ${d.jugador1} y ${d.jugador2} (${d.categoria}) para el ${d.fecha}, turno ${d.turno}. Coordinamos?`
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank")
@@ -182,8 +184,9 @@ export default function DesafiosPage() {
               ))}
             </div>
 
-            <label style={{ display: "block", fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>Teléfono de contacto</label>
-            <input value={telefono} onChange={e => setTelefono(e.target.value)} type="tel" inputMode="tel" placeholder="Ej: 11 4162-6719" style={{ ...inputStyle, marginBottom: 22 }} />
+            <label style={{ display: "block", fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>Teléfono de cada jugador</label>
+            <input value={telefono1} onChange={e => setTelefono1(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${j1 || "Jugador 1"}`} style={inputStyle} />
+            <input value={telefono2} onChange={e => setTelefono2(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${j2 || "Jugador 2"}`} style={{ ...inputStyle, marginBottom: 22 }} />
 
             {error && <p style={{ fontFamily: inter, fontSize: 13, color: "#ff6b6b", marginBottom: 14, textAlign: "center" }}>{error}</p>}
 
