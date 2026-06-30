@@ -19,7 +19,7 @@ const oswald = "'Oswald', sans-serif"
 const inter  = "'Inter', sans-serif"
 
 /* ⚠️ Pegar acá la URL del Apps Script de la planilla "Desafíos" (la que vas a crear) */
-const DESAFIOS_URL = "PEGAR_URL_ACA"
+const DESAFIOS_URL = "https://script.google.com/macros/s/AKfycbz_-Q9pCsMEtCJZ8UNgRzfi_PlOSD8UHC8hqvUW70FA3-nRlnGjpiVRI7-gExnHT7DHVA/exec"
 
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
