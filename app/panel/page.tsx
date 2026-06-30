@@ -131,15 +131,15 @@ export default function PanelPage() {
     cargar()
   }, [unlocked])
 
-  // Armar grupos: cada jugador entra en un grupo por cada turno que eligió
+  // Agrupar a todos los disponibles por DÍA + HORARIO (cada jugador entra por cada turno que eligió)
   const grupos: Grupo[] = (() => {
     const mapa: Record<string, Grupo> = {}
     anotados.forEach((a, idx) => {
       const turnos = String(a.turnos || "").split(",").map(t => t.trim()).filter(Boolean)
       const lista = turnos.length ? turnos : ["(sin turno)"]
       lista.forEach(turno => {
-        const clave = `${a.fechaJugar}||${turno}||${a.categoria}`
-        if (!mapa[clave]) mapa[clave] = { clave, fechaJugar: a.fechaJugar, turno, categoria: a.categoria, jugadores: [] }
+        const clave = `${a.fechaJugar}||${turno}`
+        if (!mapa[clave]) mapa[clave] = { clave, fechaJugar: a.fechaJugar, turno, categoria: "", jugadores: [] }
         mapa[clave].jugadores.push({
           key: `${clave}__${idx}`,
           nombre: a.nombre, posicion: a.posicion, categoria: a.categoria,
@@ -151,9 +151,7 @@ export default function PanelPage() {
       const d1 = parseFecha(g1.fechaJugar)?.getTime() ?? Infinity
       const d2 = parseFecha(g2.fechaJugar)?.getTime() ?? Infinity
       if (d1 !== d2) return d1 - d2
-      const t = ORDEN_TURNO.indexOf(g1.turno) - ORDEN_TURNO.indexOf(g2.turno)
-      if (t !== 0) return t
-      return ORDEN_CAT.indexOf(g1.categoria) - ORDEN_CAT.indexOf(g2.categoria)
+      return ORDEN_TURNO.indexOf(g1.turno) - ORDEN_TURNO.indexOf(g2.turno)
     })
   })()
 
@@ -260,7 +258,6 @@ export default function PanelPage() {
               const del = g.jugadores.filter(j => /delantero/i.test(j.posicion))
               const zag = g.jugadores.filter(j => /zaguero/i.test(j.posicion))
               const otros = g.jugadores.filter(j => !/delantero|zaguero/i.test(j.posicion))
-              const listo = del.length >= 2 && zag.length >= 2
               const Col = ({ titulo, arr }: { titulo: string; arr: Jugador[] }) => (
                 arr.length === 0 ? null : (
                   <div style={{ flex: 1, minWidth: isMobile ? "100%" : 220 }}>
@@ -278,6 +275,7 @@ export default function PanelPage() {
                                 {sel && <Check size={13} color={C.negro} strokeWidth={3} />}
                               </span>
                               <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: C.blanco, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
+                              <span style={{ flexShrink: 0, fontFamily: inter, fontSize: 10, fontWeight: 700, color: C.amarillo, border: `1px solid ${C.amarillo}55`, borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>{j.categoria}</span>
                             </span>
                             <a href={`https://wa.me/${String(j.telefono).replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                               style={{ flexShrink: 0, fontFamily: inter, fontSize: 12, color: C.gris, textDecoration: "underline", whiteSpace: "nowrap" }}>{j.telefono}</a>
@@ -289,19 +287,14 @@ export default function PanelPage() {
                 )
               )
               return (
-                <div key={g.clave} style={{ background: C.card, border: `1px solid ${listo ? C.verde : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 16 : 22 }}>
+                <div key={g.clave} style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: isMobile ? 16 : 22 }}>
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: isMobile ? 19 : 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>
-                        <Calendar size={18} color={C.amarillo} /> {fechaCompleta(g.fechaJugar)}
-                      </span>
-                      {listo && <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.verde, padding: "4px 11px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap" }}>✓ Hay para armar</span>}
-                    </div>
-                    <p style={{ fontFamily: inter, fontSize: 14.5, color: C.blanco, margin: "0 0 4px" }}>
-                      <span style={{ color: C.amarillo, fontWeight: 600 }}>Horario:</span> {g.turno}
-                    </p>
+                    <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.amarillo, marginBottom: 8 }}>Disponibles</p>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: isMobile ? 19 : 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>
+                      <Calendar size={18} color={C.amarillo} /> {fechaCompleta(g.fechaJugar)}
+                    </span>
                     <p style={{ fontFamily: inter, fontSize: 14.5, color: C.blanco, margin: 0 }}>
-                      <span style={{ color: C.amarillo, fontWeight: 600 }}>Categoría:</span> {g.categoria} <span style={{ color: C.grisTenue }}>· {g.jugadores.length} anotado{g.jugadores.length !== 1 ? "s" : ""}</span>
+                      <span style={{ color: C.amarillo, fontWeight: 600 }}>Horario:</span> {g.turno} <span style={{ color: C.grisTenue }}>· {g.jugadores.length} disponible{g.jugadores.length !== 1 ? "s" : ""}</span>
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
