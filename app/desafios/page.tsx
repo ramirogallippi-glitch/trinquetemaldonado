@@ -92,7 +92,12 @@ export default function DesafiosPage() {
   const cargarDesafios = () => {
     fetch(DESAFIOS_URL)
       .then(r => r.json())
-      .then((data) => { if (Array.isArray(data)) setDesafios(data) })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          // ignorar filas vacías o sin jugadores (partidos "fantasma")
+          setDesafios(data.filter(x => x && String(x.jugador1 || "").trim() && String(x.jugador2 || "").trim()))
+        }
+      })
       .catch(() => {})
       .finally(() => setCargando(false))
   }
@@ -127,28 +132,27 @@ export default function DesafiosPage() {
     setTimeout(cargarDesafios, 2000)
   }
 
-  const confirmarAceptar = async (d: Desafio) => {
+  const confirmarAceptar = (d: Desafio) => {
     if (!rival1.trim() || !rival2.trim()) {
       setErrorAceptar("Completá los nombres de los dos jugadores de tu dupla.")
       return
     }
     setErrorAceptar("")
-    try {
-      await fetch(DESAFIOS_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2 }),
-      })
-    } catch (e) {}
-    // optimista: marco el partido como completo
-    setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
-    // aviso a Dani por WhatsApp (lo manda el que acepta)
+    // 1) Abrir WhatsApp PRIMERO (en el toque directo, clave para que funcione en iPhone)
     const msg =
-      `Hola! Se armó un partido de pelota paleta 🎾\n` +
+      `Hola! Se armó un partido de pelota paleta\n` +
       `${d.jugador1} y ${d.jugador2} VS ${rival1} y ${rival2}\n` +
       `Categoría: ${d.categoria}\n` +
       `Fecha: ${d.fecha} · Turno: ${d.turno}`
     window.open(`https://wa.me/${DANI_WA}?text=${encodeURIComponent(msg)}`, "_blank")
+    // 2) Guardar en la planilla (sin esperar, así no bloquea la apertura de WhatsApp)
+    fetch(DESAFIOS_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2 }),
+    }).catch(() => {})
+    // 3) optimista: marco el partido como completo
+    setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
     setAceptandoId(null); setRival1(""); setRival2("")
     setTimeout(cargarDesafios, 2000)
   }
