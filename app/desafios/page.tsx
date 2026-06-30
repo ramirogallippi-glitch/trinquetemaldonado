@@ -52,6 +52,15 @@ function useIsMobile() {
   return m
 }
 
+// Convierte cualquier formato de fecha a DD/MM/YYYY (limpio, sin GMT ni "Wed")
+function formatFecha(v: string): string {
+  if (!v) return ""
+  if (v.indexOf("/") !== -1) return v.split(" ")[0]      // ya viene DD/MM/YYYY
+  const d = new Date(v)
+  if (isNaN(d.getTime())) return v
+  return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`
+}
+
 export default function DesafiosPage() {
   const isMobile = useIsMobile()
   const [desafios, setDesafios] = useState<Desafio[]>([])
@@ -140,10 +149,11 @@ export default function DesafiosPage() {
     setErrorAceptar("")
     // 1) Abrir WhatsApp PRIMERO (en el toque directo, clave para que funcione en iPhone)
     const msg =
-      `Hola! Se armó un partido de pelota paleta\n` +
+      `Hola! Se armó un partido de pelota paleta\n\n` +
       `${d.jugador1} y ${d.jugador2} VS ${rival1} y ${rival2}\n` +
       `Categoría: ${d.categoria}\n` +
-      `Fecha: ${d.fecha} · Turno: ${d.turno}`
+      `Fecha: ${formatFecha(d.fecha)}\n` +
+      `Horario: ${d.turno}`
     window.open(`https://wa.me/${DANI_WA}?text=${encodeURIComponent(msg)}`, "_blank")
     // 2) Guardar en la planilla (sin esperar, así no bloquea la apertura de WhatsApp)
     fetch(DESAFIOS_URL, {
@@ -307,7 +317,7 @@ export default function DesafiosPage() {
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontFamily: oswald, fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6B8F71", minWidth: 92 }}>Fecha:</span>
-                          <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco }}>{d.fecha}</span>
+                          <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco }}>{formatFecha(d.fecha)}</span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontFamily: oswald, fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6B8F71", minWidth: 92 }}>Horario:</span>
@@ -327,7 +337,7 @@ export default function DesafiosPage() {
                         </div>
                         <p style={{ fontFamily: inter, fontSize: 12.5, color: C.amarillo, marginBottom: 10, fontWeight: 500 }}>Esperando una dupla que los desafíe 🎾</p>
                         <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                          <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Calendar size={15} color={C.amarillo} /> {d.fecha}</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Calendar size={15} color={C.amarillo} /> {formatFecha(d.fecha)}</span>
                           <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Clock size={15} color={C.amarillo} /> {d.turno}</span>
                         </div>
                       </div>
