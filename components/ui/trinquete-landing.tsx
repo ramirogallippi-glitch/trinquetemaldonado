@@ -489,7 +489,10 @@ function Footer() {
         </div>
 
         <div style={{ paddingTop: 24, borderTop: `1px solid ${C.cardBorde}`, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 10 }}>
-          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue }}>© 2026 Trinquete Maldonado. Todos los derechos reservados.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, margin: 0 }}>© 2026 Trinquete Maldonado. Todos los derechos reservados.</p>
+            <a href="/panel" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: inter, fontSize: 12, color: C.gris, textDecoration: "underline", width: "fit-content" }}>🔒 Panel de Dani</a>
+          </div>
           <a href={`https://wa.me/${WA}?text=${encodeURIComponent("Hola! Quería consultar por el gimnasio.")}`} target="_blank" rel="noopener noreferrer"
             style={{ fontFamily: oswald, fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, color: C.negro, background: C.amarillo, padding: "9px 20px", borderRadius: 7 }}>
             Escribinos por WhatsApp
