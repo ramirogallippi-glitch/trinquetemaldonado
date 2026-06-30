@@ -289,17 +289,26 @@ export default function DesafiosPage() {
                     /* ── PARTIDO ARMADO 2 vs 2 ── */
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                        <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: "#6B8F71", padding: "4px 11px", borderRadius: 999, textTransform: "uppercase" }}>✓ Partido armado</span>
-                        <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.amarillo, padding: "4px 11px", borderRadius: 999, textTransform: "uppercase" }}>{d.categoria}</span>
+                        <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: "#6B8F71", padding: "4px 11px", borderRadius: 999, textTransform: "uppercase" }}>✓ Partido armado · Completo</span>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 16, flexWrap: "wrap" }}>
                         <span style={{ fontFamily: oswald, fontSize: isMobile ? 17 : 20, fontWeight: 700, textTransform: "uppercase", color: C.blanco, textAlign: "center" }}>{d.jugador1} & {d.jugador2}</span>
                         <span style={{ fontFamily: anton, fontSize: 18, color: C.amarillo }}>VS</span>
                         <span style={{ fontFamily: oswald, fontSize: isMobile ? 17 : 20, fontWeight: 700, textTransform: "uppercase", color: C.blanco, textAlign: "center" }}>{d.rival1} & {d.rival2}</span>
                       </div>
-                      <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", paddingTop: 12, borderTop: `1px solid ${C.cardBorde}` }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Calendar size={15} color="#6B8F71" /> {d.fecha}</span>
-                        <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Clock size={15} color="#6B8F71" /> {d.turno}</span>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 14, borderTop: `1px solid ${C.cardBorde}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontFamily: oswald, fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6B8F71", minWidth: 92 }}>Categoría:</span>
+                          <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco }}>{d.categoria}</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontFamily: oswald, fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6B8F71", minWidth: 92 }}>Fecha:</span>
+                          <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco }}>{d.fecha}</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontFamily: oswald, fontSize: 13, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#6B8F71", minWidth: 92 }}>Horario:</span>
+                          <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco }}>{d.turno}</span>
+                        </div>
                       </div>
                     </div>
                   ) : (
