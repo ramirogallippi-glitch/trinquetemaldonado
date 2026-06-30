@@ -65,22 +65,23 @@ function useIsMobile() {
 }
 
 function parseFecha(v: string): Date | null {
-  const p = String(v || "").trim().split(" ")[0].split("/")
-  if (p.length !== 3) return null
-  return new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10))
-}
-function fechaLegible(v: string): string {
-  const d = parseFecha(v)
-  if (!d || isNaN(d.getTime())) return v
-  return `${DIAS[d.getDay()]} ${v.split(" ")[0]}`
+  const s = String(v || "").trim()
+  // formato DD/MM/YYYY
+  const p = s.split(" ")[0].split("/")
+  if (p.length === 3) {
+    const d = new Date(parseInt(p[2], 10), parseInt(p[1], 10) - 1, parseInt(p[0], 10))
+    if (!isNaN(d.getTime())) return d
+  }
+  // fallback: texto de fecha en inglés ("Wed Mar 26 2026...") o ISO
+  const d2 = new Date(s)
+  return isNaN(d2.getTime()) ? null : d2
 }
 function fechaCompleta(v: string): string {
   const d = parseFecha(v)
   if (!d || isNaN(d.getTime())) return v
   const dd = String(d.getDate()).padStart(2, "0")
   const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const yy = String(d.getFullYear()).slice(-2)
-  return `${DIAS_LARGO[d.getDay()]} ${dd}/${mm}/${yy}`
+  return `${DIAS_LARGO[d.getDay()]} ${dd}/${mm}`
 }
 
 export default function PanelPage() {
