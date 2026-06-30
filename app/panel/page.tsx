@@ -234,7 +234,7 @@ export default function PanelPage() {
               Anotados individuales, agrupados por <strong style={{ color: C.blanco }}>fecha · turno · categoría</strong>. Tocá los jugadores para armar un partido y avisarles.
             </p>
           </div>
-          <button onClick={cargar} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 13, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "10px 16px", borderRadius: 8 }}>
+          <button onClick={() => cargar()} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 13, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "10px 16px", borderRadius: 8 }}>
             <RefreshCw size={15} /> Actualizar
           </button>
         </div>
@@ -247,7 +247,7 @@ export default function PanelPage() {
             <p style={{ fontFamily: inter, fontSize: 13, color: C.gris, marginBottom: 20, lineHeight: 1.6 }}>
               Revisá la conexión y volvé a intentar. Si sigue fallando, siempre podés ver todo directo en la planilla de Google.
             </p>
-            <button onClick={cargar} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 24px", borderRadius: 8 }}>Reintentar</button>
+            <button onClick={() => cargar()} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 24px", borderRadius: 8 }}>Reintentar</button>
           </div>
         ) : grupos.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: "44px 20px", textAlign: "center", marginTop: 24 }}>
