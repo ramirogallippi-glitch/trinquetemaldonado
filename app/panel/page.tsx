@@ -105,18 +105,31 @@ export default function PanelPage() {
     } else setClaveError(true)
   }
 
-  const cargar = () => {
-    setCargando(true); setError(false)
+  const cargar = (intentos = 2) => {
+    setError(false)
     fetch(SHEET_URL)
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) setAnotados(data.filter(x => x && String(x.nombre || "").trim()))
-        else setError(true)
+        if (!Array.isArray(data)) throw new Error("formato")
+        const filtrados = data.filter(x => x && String(x.nombre || "").trim())
+        setAnotados(filtrados)
+        try { localStorage.setItem("trinquete_panel_cache", JSON.stringify(filtrados)) } catch {}
+        setCargando(false); setError(false)
       })
-      .catch(() => setError(true))
-      .finally(() => setCargando(false))
+      .catch(() => {
+        if (intentos > 0) { setTimeout(() => cargar(intentos - 1), 1200) }   // reintenta solo
+        else { setCargando(false); setError(true) }
+      })
   }
-  useEffect(() => { if (unlocked) cargar() }, [unlocked])
+  useEffect(() => {
+    if (!unlocked) return
+    // mostrar al instante lo último cargado (caché), mientras refresca en segundo plano
+    try {
+      const c = localStorage.getItem("trinquete_panel_cache")
+      if (c) { const arr = JSON.parse(c); if (Array.isArray(arr) && arr.length) { setAnotados(arr); setCargando(false) } }
+    } catch {}
+    cargar()
+  }, [unlocked])
 
   // Armar grupos: cada jugador entra en un grupo por cada turno que eligió
   const grupos: Grupo[] = (() => {
@@ -226,9 +239,9 @@ export default function PanelPage() {
           </button>
         </div>
 
-        {cargando ? (
+        {cargando && anotados.length === 0 ? (
           <p style={{ fontFamily: inter, color: C.gris, textAlign: "center", padding: "50px 0" }}>Cargando anotados…</p>
-        ) : error ? (
+        ) : error && anotados.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid #ff6b6b55`, borderRadius: 14, padding: "32px 22px", textAlign: "center", marginTop: 24 }}>
             <p style={{ fontFamily: inter, fontSize: 15, color: C.blanco, marginBottom: 8 }}>No se pudieron cargar los anotados.</p>
             <p style={{ fontFamily: inter, fontSize: 13, color: C.gris, marginBottom: 20, lineHeight: 1.6 }}>
