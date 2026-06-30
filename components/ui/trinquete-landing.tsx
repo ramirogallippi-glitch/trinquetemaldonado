@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { HeroGeometric } from "./shape-landing-hero"
 import {
   Dumbbell, Bike, Target, Clock, MapPin, Phone, AtSign,
-  CheckCircle2, ChevronRight, Send, Droplets,
+  CheckCircle2, ChevronRight, Send, Droplets, Swords, UserPlus,
 } from "lucide-react"
 
 /* ── Paleta ── */
@@ -47,7 +47,7 @@ function SectionTitle({ eyebrow, title, sub }: { eyebrow: string; title: string;
 }
 
 /* ── Navbar ── */
-function Navbar() {
+function Navbar({ onAnotarse }: { onAnotarse: () => void }) {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const isMobile = useIsMobile()
@@ -60,8 +60,7 @@ function Navbar() {
 
   const links = [
     { label: "Servicios", id: "servicios" },
-    { label: "Paleta", id: "paleta" },
-    { label: "Desafíos", id: "desafios", href: "/desafios" },
+    { label: "Paleta", id: "armado" },
     { label: "Galería", id: "galeria" },
     { label: "Contacto", id: "contacto" },
   ]
@@ -91,7 +90,7 @@ function Navbar() {
 
           {/* Botón Anotarme a la derecha (solo desktop) */}
           {!isMobile && (
-            <button onClick={() => go("paleta")} style={{ position: "absolute", right: 40, top: "50%", transform: "translateY(-50%)", fontFamily: oswald, fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 26px", borderRadius: 6, boxShadow: "0 4px 14px rgba(255,211,0,0.45)" }}>Anotarme</button>
+            <button onClick={() => { onAnotarse(); setOpen(false) }} style={{ position: "absolute", right: 40, top: "50%", transform: "translateY(-50%)", fontFamily: oswald, fontSize: 14, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 26px", borderRadius: 6, boxShadow: "0 4px 14px rgba(255,211,0,0.45)" }}>Anotarme</button>
           )}
         </div>
       </nav>
@@ -128,7 +127,7 @@ const servicios = [
   },
 ]
 
-function ServiciosSection() {
+function ServiciosSection({ onAnotarse }: { onAnotarse: () => void }) {
   const isMobile = useIsMobile()
   return (
     <section id="servicios" style={{ padding: isMobile ? "72px 20px" : "110px 40px", background: C.negro }}>
@@ -187,10 +186,61 @@ function ServiciosSection() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 18, borderTop: `1px solid ${C.cardBorde}` }}>
                   <span style={{ fontFamily: oswald, fontSize: 20, fontWeight: 600, color: s.color === C.amarillo ? C.amarillo : "#fff" }}>{s.precio}</span>
-                  <button onClick={() => scrollTo(s.destacado ? "paleta" : "contacto")} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: inter, fontSize: 13, fontWeight: 600, color: C.gris }}>
+                  <button onClick={() => s.destacado ? onAnotarse() : scrollTo("contacto")} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: inter, fontSize: 13, fontWeight: 600, color: C.gris }}>
                     {s.destacado ? "Anotarme" : "Consultar"} <ChevronRight size={15} />
                   </button>
                 </div>
+              </motion.div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── Armado de Paleta (elección: 2v2 o individual) ── */
+function ArmadoSection() {
+  const isMobile = useIsMobile()
+  const opciones = [
+    {
+      icon: Swords,
+      titulo: "Desafío 2 vs 2",
+      desc: "¿Ya tenés compañero? Publicá tu dupla con día y horario, y otra dupla acepta el desafío. Se arma el partido.",
+      cta: "Ir al muro de desafíos",
+      onClick: () => { window.location.href = "/desafios" },
+    },
+    {
+      icon: UserPlus,
+      titulo: "Anotarme individual",
+      desc: "¿No tenés dupla? Anotate solo con tu posición, categoría y los turnos que te sirven. Dani coordina el partido.",
+      cta: "Anotarme",
+      onClick: () => { window.location.href = "/anotarse" },
+    },
+  ]
+  return (
+    <section id="armado" style={{ padding: isMobile ? "72px 20px" : "110px 40px", background: C.negro }}>
+      <div style={{ maxWidth: 900, margin: "0 auto" }}>
+        <SectionTitle eyebrow="Pelota Paleta" title="Armado de paleta" sub="Elegí cómo querés jugar tu próximo partido." />
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 18 }}>
+          {opciones.map(o => {
+            const Icon = o.icon
+            return (
+              <motion.div key={o.titulo}
+                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+                onClick={o.onClick} role="button" tabIndex={0}
+                onKeyDown={e => { if (e.key === "Enter" || e.key === " ") o.onClick() }}
+                style={{ cursor: "pointer", display: "flex", flexDirection: "column", background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 16, padding: isMobile ? 28 : 36, transition: "border-color 0.2s, transform 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.amarillo; e.currentTarget.style.transform = "translateY(-3px)" }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.cardBorde; e.currentTarget.style.transform = "translateY(0)" }}>
+                <div style={{ width: 56, height: 56, borderRadius: 14, background: "rgba(255,211,0,0.12)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
+                  <Icon size={28} color={C.amarillo} strokeWidth={1.8} />
+                </div>
+                <h3 style={{ fontFamily: oswald, fontSize: 28, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 12 }}>{o.titulo}</h3>
+                <p style={{ fontFamily: inter, fontSize: 14.5, color: C.gris, lineHeight: 1.7, marginBottom: 26, flex: 1 }}>{o.desc}</p>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, color: C.negro, background: C.amarillo, padding: "13px 22px", borderRadius: 8, alignSelf: "flex-start" }}>
+                  {o.cta} <ChevronRight size={17} />
+                </span>
               </motion.div>
             )
           })}
@@ -208,7 +258,7 @@ const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 // Planilla de Google (Apps Script) donde se guardan los anotados
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
 
-function PaletaSection() {
+export function PaletaSection() {
   const isMobile = useIsMobile()
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
@@ -452,16 +502,17 @@ function Footer() {
 
 /* ── Main ── */
 export default function TrinqueteLanding() {
+  const irAnotarse = () => { window.location.href = "/anotarse" }
   return (
     <main style={{ background: C.negro, minHeight: "100vh" }}>
-      <Navbar />
+      <Navbar onAnotarse={irAnotarse} />
       <HeroGeometric
-        onPrimary={() => scrollTo("paleta")}
+        onPrimary={() => scrollTo("armado")}
         onSecondary={() => window.open(`https://wa.me/${WA}?text=${encodeURIComponent("Hola! Quiero anotarme al gimnasio. Me pueden pasar info?")}`, "_blank")}
         onTertiary={() => scrollTo("servicios")}
       />
-      <ServiciosSection />
-      <PaletaSection />
+      <ServiciosSection onAnotarse={irAnotarse} />
+      <ArmadoSection />
       <GaleriaSection />
       <Footer />
     </main>

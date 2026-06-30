@@ -141,7 +141,7 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
               fontWeight: 700, cursor: "pointer", color: "#0A0A0A", background: YELLOW, border: "none",
               padding: "15px 28px", borderRadius: 6, boxShadow: "0 8px 28px rgba(255,211,0,0.35)",
               width: isMobile ? "100%" : "auto",
-            }}>Sumate a un partido de pelota-paleta</button>
+            }}>Arma tu partido de pelota-paleta</button>
             <button onClick={onSecondary} style={{
               fontFamily: oswald, fontSize: isMobile ? 14 : 15, letterSpacing: "0.06em", textTransform: "uppercase",
               fontWeight: 700, cursor: "pointer", color: "#fff", background: "rgba(0,0,0,0.45)",
