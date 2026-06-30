@@ -25,6 +25,8 @@ const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 // Número de WhatsApp de Dani (cambiar por el real cuando lo tengan)
 const DANI_WA = "5491141626719"
+// Contraseña para entrar al muro (cambiala por la que quieras que use el club)
+const CLAVE = "trinquete2026"
 
 interface Desafio {
   id: string
@@ -55,6 +57,20 @@ export default function DesafiosPage() {
   const [desafios, setDesafios] = useState<Desafio[]>([])
   const [cargando, setCargando] = useState(true)
   const [showForm, setShowForm] = useState(false)
+
+  // Acceso con contraseña
+  const [unlocked, setUnlocked] = useState(false)
+  const [claveInput, setClaveInput] = useState("")
+  const [claveError, setClaveError] = useState(false)
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("trinquete_desafios_ok") === "1") setUnlocked(true)
+  }, [])
+  const entrar = () => {
+    if (claveInput.trim().toLowerCase() === CLAVE.toLowerCase()) {
+      localStorage.setItem("trinquete_desafios_ok", "1")
+      setUnlocked(true); setClaveError(false)
+    } else { setClaveError(true) }
+  }
 
   // form
   const [j1, setJ1] = useState("")
@@ -148,6 +164,26 @@ export default function DesafiosPage() {
     border: `1.5px solid ${active ? C.amarillo : C.cardBorde}`,
     background: active ? C.amarillo : "transparent", color: active ? C.negro : C.gris,
   })
+
+  // Pantalla de contraseña
+  if (!unlocked) {
+    return (
+      <main style={{ background: C.negro, minHeight: "100vh", color: C.blanco, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <Swords size={40} color={C.amarillo} style={{ marginBottom: 18 }} />
+        <h1 style={{ fontFamily: anton, fontSize: "clamp(28px, 8vw, 44px)", textTransform: "uppercase", color: C.blanco, marginBottom: 10, textAlign: "center" }}>Muro de Desafíos</h1>
+        <p style={{ fontFamily: inter, fontSize: 14, color: C.gris, marginBottom: 26, textAlign: "center", maxWidth: 320 }}>Ingresá la clave del club para acceder.</p>
+        <input
+          type="password" value={claveInput}
+          onChange={e => { setClaveInput(e.target.value); setClaveError(false) }}
+          onKeyDown={e => { if (e.key === "Enter") entrar() }}
+          placeholder="Clave"
+          style={{ width: "100%", maxWidth: 300, boxSizing: "border-box", fontFamily: inter, fontSize: 16, color: C.blanco, background: C.card, border: `1.5px solid ${claveError ? "#ff6b6b" : C.cardBorde}`, borderRadius: 9, padding: "14px 16px", outline: "none", textAlign: "center", marginBottom: 12 }} />
+        {claveError && <p style={{ fontFamily: inter, fontSize: 13, color: "#ff6b6b", marginBottom: 12 }}>Clave incorrecta</p>}
+        <button onClick={entrar} style={{ width: "100%", maxWidth: 300, fontFamily: oswald, fontSize: 16, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "14px", borderRadius: 9 }}>Entrar</button>
+        <Link href="/" style={{ fontFamily: inter, fontSize: 13, color: C.gris, marginTop: 22, textDecoration: "underline" }}>← Volver al inicio</Link>
+      </main>
+    )
+  }
 
   return (
     <main style={{ background: C.negro, minHeight: "100vh", color: C.blanco }}>
