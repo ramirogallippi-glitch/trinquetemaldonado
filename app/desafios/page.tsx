@@ -25,6 +25,7 @@ const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 
 interface Desafio {
+  id: string
   jugador1: string
   jugador2: string
   categoria: string
@@ -32,6 +33,9 @@ interface Desafio {
   turno: string
   telefono1: string
   telefono2: string
+  estado: string   // "abierto" | "completo"
+  rival1: string
+  rival2: string
 }
 
 function useIsMobile() {
@@ -61,6 +65,12 @@ export default function DesafiosPage() {
   const [error, setError] = useState("")
   const [enviando, setEnviando] = useState(false)
 
+  // aceptar (unirse) — flujo web
+  const [aceptandoId, setAceptandoId] = useState<string | null>(null)
+  const [rival1, setRival1] = useState("")
+  const [rival2, setRival2] = useState("")
+  const [errorAceptar, setErrorAceptar] = useState("")
+
   const cargarDesafios = () => {
     fetch(DESAFIOS_URL)
       .then(r => r.json())
@@ -81,12 +91,13 @@ export default function DesafiosPage() {
     setError("")
     setEnviando(true)
     const fechaFmt = fecha.split("-").reverse().join("/")
-    const payload: Desafio = { jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2 }
+    const id = String(Date.now())
+    const payload: Desafio = { id, jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2, estado: "abierto", rival1: "", rival2: "" }
     try {
       await fetch(DESAFIOS_URL, {
         method: "POST", mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, action: "publicar" }),
       })
     } catch (e) {}
     // optimista: lo agrego al muro al toque
@@ -98,11 +109,23 @@ export default function DesafiosPage() {
     setTimeout(cargarDesafios, 2000)
   }
 
-  const aceptar = (d: Desafio) => {
-    const tel = (d.telefono1 || d.telefono2 || "").replace(/[^0-9]/g, "")
-    const wa = tel.startsWith("54") ? tel : `549${tel.replace(/^0/, "")}`
-    const msg = `Hola! Aceptamos el desafío de ${d.jugador1} y ${d.jugador2} (${d.categoria}) para el ${d.fecha}, turno ${d.turno}. Coordinamos?`
-    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank")
+  const confirmarAceptar = async (d: Desafio) => {
+    if (!rival1.trim() || !rival2.trim()) {
+      setErrorAceptar("Completá los nombres de los dos jugadores de tu dupla.")
+      return
+    }
+    setErrorAceptar("")
+    try {
+      await fetch(DESAFIOS_URL, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2 }),
+      })
+    } catch (e) {}
+    // optimista: marco el partido como completo
+    setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
+    setAceptandoId(null); setRival1(""); setRival2("")
+    setTimeout(cargarDesafios, 2000)
   }
 
   const inputStyle: React.CSSProperties = {
@@ -201,7 +224,7 @@ export default function DesafiosPage() {
 
         {/* Muro */}
         <h2 style={{ fontFamily: oswald, fontSize: 20, fontWeight: 700, textTransform: "uppercase", color: C.amarillo, marginBottom: 18, letterSpacing: "0.05em" }}>
-          Desafíos abiertos
+          Desafíos
         </h2>
 
         {cargando ? (
@@ -213,35 +236,75 @@ export default function DesafiosPage() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {desafios.map((d, i) => (
-              <div key={i} style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22,
-                display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: 16 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontFamily: oswald, fontSize: isMobile ? 19 : 21, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>
-                      {d.jugador1} <span style={{ color: C.amarillo }}>&</span> {d.jugador2}
-                    </span>
-                    <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.amarillo, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase" }}>{d.categoria}</span>
-                  </div>
-                  <p style={{ fontFamily: inter, fontSize: 12.5, color: C.amarillo, marginBottom: 10, fontWeight: 500 }}>Esperando una dupla que los desafíe 🎾</p>
-                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}>
-                      <Calendar size={15} color={C.amarillo} /> {d.fecha}
-                    </span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}>
-                      <Clock size={15} color={C.amarillo} /> {d.turno}
-                    </span>
-                  </div>
+            {desafios.map((d) => {
+              const completo = d.estado === "completo"
+              return (
+                <div key={d.id} style={{ background: C.card, border: `1px solid ${completo ? "#6B8F71" : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22 }}>
+                  {completo ? (
+                    /* ── PARTIDO ARMADO 2 vs 2 ── */
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                        <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: "#6B8F71", padding: "4px 11px", borderRadius: 999, textTransform: "uppercase" }}>✓ Partido armado</span>
+                        <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.amarillo, padding: "4px 11px", borderRadius: 999, textTransform: "uppercase" }}>{d.categoria}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 16, flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: oswald, fontSize: isMobile ? 17 : 20, fontWeight: 700, textTransform: "uppercase", color: C.blanco, textAlign: "center" }}>{d.jugador1} & {d.jugador2}</span>
+                        <span style={{ fontFamily: anton, fontSize: 18, color: C.amarillo }}>VS</span>
+                        <span style={{ fontFamily: oswald, fontSize: isMobile ? 17 : 20, fontWeight: 700, textTransform: "uppercase", color: C.blanco, textAlign: "center" }}>{d.rival1} & {d.rival2}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", paddingTop: 12, borderTop: `1px solid ${C.cardBorde}` }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Calendar size={15} color="#6B8F71" /> {d.fecha}</span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Clock size={15} color="#6B8F71" /> {d.turno}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ── DESAFÍO ABIERTO ── */
+                    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center", justifyContent: "space-between", gap: 16 }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <span style={{ fontFamily: oswald, fontSize: isMobile ? 19 : 21, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>
+                            {d.jugador1} <span style={{ color: C.amarillo }}>&</span> {d.jugador2}
+                          </span>
+                          <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.amarillo, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase" }}>{d.categoria}</span>
+                        </div>
+                        <p style={{ fontFamily: inter, fontSize: 12.5, color: C.amarillo, marginBottom: 10, fontWeight: 500 }}>Esperando una dupla que los desafíe 🎾</p>
+                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Calendar size={15} color={C.amarillo} /> {d.fecha}</span>
+                          <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Clock size={15} color={C.amarillo} /> {d.turno}</span>
+                        </div>
+                      </div>
+                      {aceptandoId !== d.id && (
+                        <button onClick={() => { setAceptandoId(d.id); setRival1(""); setRival2(""); setErrorAceptar("") }} style={{
+                          fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700,
+                          cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 22px", borderRadius: 8,
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 8, whiteSpace: "nowrap",
+                        }}>
+                          <Swords size={16} /> Unirse / Aceptar
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mini-form para aceptar */}
+                  {!completo && aceptandoId === d.id && (
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.cardBorde}` }}>
+                      <p style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu dupla (los rivales)</p>
+                      <input value={rival1} onChange={e => setRival1(e.target.value)} placeholder="Jugador 1" style={inputStyle} />
+                      <input value={rival2} onChange={e => setRival2(e.target.value)} placeholder="Jugador 2" style={{ ...inputStyle, marginBottom: 14 }} />
+                      {errorAceptar && <p style={{ fontFamily: inter, fontSize: 12.5, color: "#ff6b6b", marginBottom: 12 }}>{errorAceptar}</p>}
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button onClick={() => confirmarAceptar(d)} style={{ flex: 1, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "13px", borderRadius: 8 }}>
+                          Confirmar partido
+                        </button>
+                        <button onClick={() => setAceptandoId(null)} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "13px 18px", borderRadius: 8 }}>
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => aceptar(d)} style={{
-                  fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700,
-                  cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 22px", borderRadius: 8,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8, whiteSpace: "nowrap",
-                }}>
-                  <Swords size={16} /> Unirse / Aceptar
-                </button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
