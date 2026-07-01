@@ -88,6 +88,27 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           : "linear-gradient(90deg, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.45) 30%, rgba(10,10,10,0.1) 52%, transparent 70%)",
       }} />
 
+      {/* ── Acentos de marca (amarillo), estilo deportivo ── */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", overflow: "hidden" }}>
+        {/* Franjas diagonales arriba a la derecha */}
+        <div style={{ position: "absolute", top: -60, right: -30, width: 540, height: 360, overflow: "hidden" }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} style={{ position: "absolute", top: -20 + i * 34, right: -60, width: 660, height: 15,
+              background: YELLOW, opacity: [0.95, 0.6, 0.4, 0.22][i], transform: "rotate(-42deg)", transformOrigin: "right center" }} />
+          ))}
+        </div>
+        {/* Franjas diagonales abajo a la izquierda (sutiles) */}
+        <div style={{ position: "absolute", bottom: -50, left: -30, width: 320, height: 220, overflow: "hidden" }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{ position: "absolute", bottom: i * 28, left: -40, width: 440, height: 13,
+              background: YELLOW, opacity: [0.5, 0.3, 0.18][i], transform: "rotate(-42deg)", transformOrigin: "left center" }} />
+          ))}
+        </div>
+        {/* Estrellas sparkle */}
+        <svg width={isMobile ? 24 : 34} height={isMobile ? 24 : 34} viewBox="0 0 24 24" fill={YELLOW} style={{ position: "absolute", right: "11%", top: "24%", opacity: 0.9 }}><path d="M12 0c1 8 3 11 12 12-9 1-11 4-12 12-1-8-3-11-12-12 9-1 11-4 12-12z" /></svg>
+        <svg width={isMobile ? 15 : 20} height={isMobile ? 15 : 20} viewBox="0 0 24 24" fill={YELLOW} style={{ position: "absolute", right: "5%", top: "15%", opacity: 0.65 }}><path d="M12 0c1 8 3 11 12 12-9 1-11 4-12 12-1-8-3-11-12-12 9-1 11-4 12-12z" /></svg>
+      </div>
+
       {/* Logo del Trinquete (tal cual, separado de los bordes) */}
       <img src="/logo.png" alt="Trinquete Maldonado" style={{
         position: "absolute", bottom: isMobile ? 16 : 22, right: isMobile ? 16 : 22, zIndex: 4, pointerEvents: "none",
