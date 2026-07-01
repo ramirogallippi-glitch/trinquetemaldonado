@@ -80,52 +80,13 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           }} />
       )}
 
-      {/* oscurecido para legibilidad del texto */}
+      {/* oscurecido para legibilidad — en PC un degradado a la izquierda (donde va el texto) */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
         background: isMobile
           ? "linear-gradient(180deg, rgba(13,13,13,0.1) 0%, rgba(13,13,13,0.1) 50%, rgba(13,13,13,0.4) 100%)"
-          : "linear-gradient(90deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.4) 30%, transparent 60%)",
+          : "linear-gradient(90deg, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.45) 30%, rgba(10,10,10,0.1) 52%, transparent 70%)",
       }} />
-
-      {/* Panel negro angular a la izquierda (marco tipo deportivo, solo PC) */}
-      {!isMobile && (
-        <>
-          <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: "46%", zIndex: 1, pointerEvents: "none",
-            background: "rgba(10,10,10,0.6)", clipPath: "polygon(0 0, 100% 0, 78% 100%, 0 100%)" }} />
-          {/* borde angular oscuro a la derecha */}
-          <div style={{ position: "absolute", top: 0, bottom: 0, right: 0, width: "16%", zIndex: 1, pointerEvents: "none",
-            background: "rgba(10,10,10,0.55)", clipPath: "polygon(28% 0, 100% 0, 100% 100%, 0 100%)" }} />
-        </>
-      )}
-
-      {/* ── Acentos amarillos, estilo deportivo ── */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 3, pointerEvents: "none", overflow: "hidden" }}>
-        {/* Franjas diagonales arriba a la derecha (bold) */}
-        <div style={{ position: "absolute", top: -80, right: -40, width: 620, height: 420, overflow: "hidden" }}>
-          {[0, 1, 2, 3, 4].map(i => (
-            <div key={i} style={{ position: "absolute", top: -30 + i * 30, right: -60, width: 760, height: [20, 10, 16, 8, 13][i],
-              background: YELLOW, opacity: [1, 0.55, 0.85, 0.4, 0.7][i], transform: "rotate(-42deg)", transformOrigin: "right center" }} />
-          ))}
-        </div>
-        {/* Franjas amarillas junto a la diagonal del panel izquierdo (solo PC) */}
-        {!isMobile && (
-          <>
-            <div style={{ position: "absolute", top: "-8%", left: "43%", width: 13, height: "125%", background: YELLOW, opacity: 0.9, transform: "rotate(13deg)", transformOrigin: "top center" }} />
-            <div style={{ position: "absolute", top: "-8%", left: "46.5%", width: 6, height: "125%", background: YELLOW, opacity: 0.5, transform: "rotate(13deg)", transformOrigin: "top center" }} />
-          </>
-        )}
-        {/* Franjas diagonales abajo a la derecha */}
-        <div style={{ position: "absolute", bottom: -60, right: "8%", width: 300, height: 240, overflow: "hidden" }}>
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{ position: "absolute", bottom: i * 26, right: -40, width: 400, height: [14, 9, 7][i],
-              background: YELLOW, opacity: [0.7, 0.4, 0.25][i], transform: "rotate(-42deg)", transformOrigin: "right center" }} />
-          ))}
-        </div>
-        {/* Estrellas sparkle */}
-        <svg width={isMobile ? 24 : 34} height={isMobile ? 24 : 34} viewBox="0 0 24 24" fill={YELLOW} style={{ position: "absolute", right: "11%", top: "24%", opacity: 0.9 }}><path d="M12 0c1 8 3 11 12 12-9 1-11 4-12 12-1-8-3-11-12-12 9-1 11-4 12-12z" /></svg>
-        <svg width={isMobile ? 15 : 20} height={isMobile ? 15 : 20} viewBox="0 0 24 24" fill={YELLOW} style={{ position: "absolute", right: "5%", top: "15%", opacity: 0.6 }}><path d="M12 0c1 8 3 11 12 12-9 1-11 4-12 12-1-8-3-11-12-12 9-1 11-4 12-12z" /></svg>
-      </div>
 
       {/* Logo del Trinquete (tal cual, separado de los bordes) */}
       <img src="/logo.png" alt="Trinquete Maldonado" style={{
