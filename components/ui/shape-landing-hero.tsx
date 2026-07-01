@@ -77,15 +77,16 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover", objectPosition: "center",
+            transform: "scale(1.14)", transformOrigin: "left top",
           }} />
       )}
 
-      {/* oscurecido para legibilidad — en PC un degradado a la izquierda (donde va el texto) */}
+      {/* oscurecido para legibilidad (más fuerte en mobile) */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
         background: isMobile
           ? "linear-gradient(180deg, rgba(13,13,13,0.1) 0%, rgba(13,13,13,0.1) 50%, rgba(13,13,13,0.4) 100%)"
-          : "linear-gradient(90deg, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.45) 30%, rgba(10,10,10,0.1) 52%, transparent 70%)",
+          : "none",
       }} />
 
       {/* Logo del Trinquete (tal cual, separado de los bordes) */}
