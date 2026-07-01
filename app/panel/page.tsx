@@ -21,6 +21,8 @@ const inter  = "'Inter', sans-serif"
 
 // Misma planilla individual (la que ya usás para anotarse)
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
+// Agenda de la cancha (turnos ocupados)
+const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx3gnqeM00tKwYye3D2sk3_ipEAgoabR3JyJ0rIQXZ6QmDIB44d/exec"
 // Clave para que solo entre Dani / el club
 const CLAVE = "trinquete2026"
 
@@ -83,6 +85,12 @@ function fechaCompleta(v: string): string {
   const mm = String(d.getMonth() + 1).padStart(2, "0")
   return `${DIAS_LARGO[d.getDay()]} ${dd}/${mm}`
 }
+// DD/MM/YYYY (para que las reservas coincidan con el sistema de desafíos)
+function fechaDMY(v: string): string {
+  const d = parseFecha(v)
+  if (!d) return String(v || "").split(" ")[0]
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`
+}
 
 export default function PanelPage() {
   const isMobile = useIsMobile()
@@ -92,6 +100,7 @@ export default function PanelPage() {
   const [seleccion, setSeleccion] = useState<Record<string, Jugador>>({})
   const [copiado, setCopiado] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
+  const [reservados, setReservados] = useState<Set<string>>(new Set())
 
   // Acceso con contraseña
   const [unlocked, setUnlocked] = useState(false)
@@ -130,7 +139,17 @@ export default function PanelPage() {
       if (c) { const arr = JSON.parse(c); if (Array.isArray(arr) && arr.length) { setAnotados(arr); setCargando(false) } }
     } catch {}
     cargar()
+    cargarReservas()
   }, [unlocked])
+
+  const cargarReservas = () => {
+    fetch(RESERVAS_URL)
+      .then(r => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setReservados(new Set(data.map((r: any) => `${fechaDMY(r.fecha)}|${String(r.turno).trim()}`)))
+      })
+      .catch(() => {})
+  }
 
   // Agrupar a todos los disponibles por DÍA + HORARIO (cada jugador entra por cada turno que eligió)
   const grupos: Grupo[] = (() => {
@@ -212,6 +231,17 @@ export default function PanelPage() {
   const confirmarEnviado = () => {
     const armados = seleccionados
     quitarDeLaPlanilla(armados)
+    // Reservar el turno de la cancha (día + horario del partido armado)
+    const base = armados[0]
+    if (base) {
+      const fResv = fechaDMY(base.fechaJugar)
+      fetch(RESERVAS_URL, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "reservar", fecha: fResv, turno: base.turno }),
+      }).catch(() => {})
+      setReservados(prev => new Set(prev).add(`${fResv}|${String(base.turno).trim()}`))
+    }
     const fuera: Record<string, boolean> = {}
     armados.forEach(j => { fuera[`${j.nombre}__${j.telefono}`] = true })
     setAnotados(prev => prev.filter(a => !fuera[`${a.nombre}__${a.telefono}`]))
@@ -225,6 +255,7 @@ export default function PanelPage() {
     const zag = g.jugadores.filter(j => /zaguero/i.test(j.posicion))
     const otros = g.jugadores.filter(j => !/delantero|zaguero/i.test(j.posicion))
     const listo = del.length >= 2 && zag.length >= 2
+    const reservado = reservados.has(`${fechaDMY(g.fechaJugar)}|${String(g.turno).trim()}`)
     const faltanDel = Math.max(0, 2 - del.length)
     const faltanZag = Math.max(0, 2 - zag.length)
     const faltanTxt = [faltanDel ? `${faltanDel} delantero${faltanDel > 1 ? "s" : ""}` : null, faltanZag ? `${faltanZag} zaguero${faltanZag > 1 ? "s" : ""}` : null].filter(Boolean).join(" y ")
@@ -236,14 +267,14 @@ export default function PanelPage() {
             {arr.map(j => {
               const sel = !!seleccion[j.key]
               return (
-                <div key={j.key} onClick={() => toggle(j)} role="button" tabIndex={0}
-                  style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                <div key={j.key} onClick={reservado ? undefined : () => toggle(j)} role="button" tabIndex={0}
+                  style={{ cursor: reservado ? "default" : "pointer", opacity: reservado ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
                     background: sel ? "rgba(255,211,0,0.14)" : "#0d0d0d", border: `1.5px solid ${sel ? C.amarillo : C.cardBorde}`,
                     borderRadius: 9, padding: "10px 12px", transition: "all 0.15s" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    <span style={{ width: 18, height: 18, flexShrink: 0, borderRadius: 5, border: `1.5px solid ${sel ? C.amarillo : C.grisTenue}`, background: sel ? C.amarillo : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {!reservado && <span style={{ width: 18, height: 18, flexShrink: 0, borderRadius: 5, border: `1.5px solid ${sel ? C.amarillo : C.grisTenue}`, background: sel ? C.amarillo : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {sel && <Check size={13} color={C.negro} strokeWidth={3} />}
-                    </span>
+                    </span>}
                     <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: C.blanco, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
                     <span style={{ flexShrink: 0, fontFamily: inter, fontSize: 10, fontWeight: 700, color: C.amarillo, border: `1px solid ${C.amarillo}55`, borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>{j.categoria}</span>
                   </span>
@@ -257,9 +288,12 @@ export default function PanelPage() {
       )
     )
     return (
-      <div key={g.clave} style={{ background: C.card, border: `1px solid ${listo ? C.verde : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 16 : 22 }}>
+      <div key={g.clave} style={{ background: C.card, border: `1px solid ${reservado ? C.cardBorde : (listo ? C.verde : C.cardBorde)}`, borderRadius: 14, padding: isMobile ? 16 : 22, opacity: reservado ? 0.9 : 1 }}>
         <div style={{ marginBottom: 16 }}>
-          <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.amarillo, marginBottom: 8 }}>Disponibles</p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.amarillo }}>Disponibles</p>
+            {reservado && <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.blanco, background: "rgba(255,255,255,0.1)", border: `1px solid ${C.cardBorde}`, padding: "4px 11px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap" }}>🔒 Turno reservado</span>}
+          </div>
           <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: isMobile ? 19 : 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>
             <Calendar size={18} color={C.amarillo} /> {fechaCompleta(g.fechaJugar)}
           </span>
@@ -267,7 +301,12 @@ export default function PanelPage() {
             <span style={{ color: C.amarillo, fontWeight: 600 }}>Horario:</span> {g.turno} <span style={{ color: C.grisTenue }}>· {g.jugadores.length} disponible{g.jugadores.length !== 1 ? "s" : ""}</span>
           </p>
         </div>
-        {!listo && (
+        {reservado && (
+          <div style={{ marginBottom: 16, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.cardBorde}`, borderRadius: 9 }}>
+            <span style={{ fontFamily: inter, fontSize: 13.5, color: C.gris }}>Este turno ya tiene un partido armado. No se puede usar de nuevo.</span>
+          </div>
+        )}
+        {!listo && !reservado && (
           <div style={{ marginBottom: 16, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.cardBorde}`, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
             <span style={{ fontFamily: inter, fontSize: 13.5, color: C.gris }}>Faltan <strong style={{ color: C.blanco }}>{faltanTxt}</strong> para armar</span>
             <button onClick={() => avisarFaltan(g, faltanDel, faltanZag)} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: oswald, fontSize: 12.5, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "9px 14px", borderRadius: 7 }}>

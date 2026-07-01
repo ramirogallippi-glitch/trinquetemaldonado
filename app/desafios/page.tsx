@@ -20,6 +20,8 @@ const inter  = "'Inter', sans-serif"
 
 /* ⚠️ Pegar acá la URL del Apps Script de la planilla "Desafíos" (la que vas a crear) */
 const DESAFIOS_URL = "https://script.google.com/macros/s/AKfycbz_-Q9pCsMEtCJZ8UNgRzfi_PlOSD8UHC8hqvUW70FA3-nRlnGjpiVRI7-gExnHT7DHVA/exec"
+// Agenda de la cancha (turnos ocupados)
+const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx3gnqeM00tKwYye3D2sk3_ipEAgoabR3JyJ0rIQXZ6QmDIB44d/exec"
 
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
@@ -64,6 +66,7 @@ function formatFecha(v: string): string {
 export default function DesafiosPage() {
   const isMobile = useIsMobile()
   const [desafios, setDesafios] = useState<Desafio[]>([])
+  const [reservados, setReservados] = useState<Set<string>>(new Set())
   const [cargando, setCargando] = useState(true)
   const [showForm, setShowForm] = useState(false)
 
@@ -111,7 +114,16 @@ export default function DesafiosPage() {
       .finally(() => setCargando(false))
   }
 
-  useEffect(() => { cargarDesafios() }, [])
+  const cargarReservas = () => {
+    fetch(RESERVAS_URL)
+      .then(r => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setReservados(new Set(data.map((r: any) => `${formatFecha(r.fecha)}|${String(r.turno).trim()}`)))
+      })
+      .catch(() => {})
+  }
+
+  useEffect(() => { cargarDesafios(); cargarReservas() }, [])
 
   const hoyStr = (() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()
 
@@ -161,10 +173,18 @@ export default function DesafiosPage() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2 }),
     }).catch(() => {})
-    // 3) optimista: marco el partido como completo
+    // 3) reservar el turno en la agenda de la cancha
+    const claveReserva = `${formatFecha(d.fecha)}|${String(d.turno).trim()}`
+    fetch(RESERVAS_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "reservar", fecha: formatFecha(d.fecha), turno: d.turno }),
+    }).catch(() => {})
+    setReservados(prev => new Set(prev).add(claveReserva))
+    // 4) optimista: marco el partido como completo
     setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
     setAceptandoId(null); setRival1(""); setRival2("")
-    setTimeout(cargarDesafios, 2000)
+    setTimeout(() => { cargarDesafios(); cargarReservas() }, 2000)
   }
 
   const inputStyle: React.CSSProperties = {
@@ -297,6 +317,7 @@ export default function DesafiosPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {desafios.map((d) => {
               const completo = d.estado === "completo"
+              const reservado = !completo && reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)
               return (
                 <div key={d.id} style={{ background: C.card, border: `1px solid ${completo ? "#6B8F71" : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22 }}>
                   {completo ? (
@@ -341,7 +362,11 @@ export default function DesafiosPage() {
                           <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Clock size={15} color={C.amarillo} /> {d.turno}</span>
                         </div>
                       </div>
-                      {aceptandoId !== d.id && (
+                      {reservado ? (
+                        <span style={{ fontFamily: oswald, fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, color: C.gris, background: "rgba(255,255,255,0.06)", border: `1.5px solid ${C.cardBorde}`, padding: "12px 20px", borderRadius: 8, whiteSpace: "nowrap", textAlign: "center" }}>
+                          🔒 Turno reservado
+                        </span>
+                      ) : aceptandoId !== d.id && (
                         <button onClick={() => { setAceptandoId(d.id); setRival1(""); setRival2(""); setErrorAceptar("") }} style={{
                           fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700,
                           cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 22px", borderRadius: 8,
