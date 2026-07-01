@@ -91,6 +91,7 @@ export default function PanelPage() {
   const [error, setError] = useState(false)
   const [seleccion, setSeleccion] = useState<Record<string, Jugador>>({})
   const [copiado, setCopiado] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
 
   // Acceso con contraseña
   const [unlocked, setUnlocked] = useState(false)
@@ -183,17 +184,21 @@ export default function PanelPage() {
       body: JSON.stringify({ action: "quitar", jugadores: jugadores.map(j => ({ nombre: j.nombre, telefono: j.telefono })) }),
     }).catch(() => {})
   }
+  // Abre WhatsApp con el partido armado, pero NO borra todavía: primero pide confirmar el envío
   const enviarWA = () => {
     if (!seleccionados.length) return
-    const armados = seleccionados
-    // 1) Abrir WhatsApp primero (gesto directo, clave en el celular)
     window.open(`https://wa.me/?text=${encodeURIComponent(mensajeArmado)}`, "_blank")
-    // 2) Borrar de la planilla y sacarlos de la pantalla
+    setConfirmando(true)
+  }
+  // Recién acá se borran (cuando Dani confirma que efectivamente lo mandó)
+  const confirmarEnviado = () => {
+    const armados = seleccionados
     quitarDeLaPlanilla(armados)
     const fuera: Record<string, boolean> = {}
     armados.forEach(j => { fuera[`${j.nombre}__${j.telefono}`] = true })
     setAnotados(prev => prev.filter(a => !fuera[`${a.nombre}__${a.telefono}`]))
     setSeleccion({})
+    setConfirmando(false)
   }
 
   /* ── Pantalla de contraseña ── */
@@ -316,19 +321,38 @@ export default function PanelPage() {
       {/* Barra flotante de selección */}
       {seleccionados.length > 0 && (
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, background: "#0d0d0d", borderTop: `2px solid ${C.amarillo}`, padding: isMobile ? "12px 16px" : "14px 24px" }}>
-          <div style={{ maxWidth: 820, margin: "0 auto", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: oswald, fontSize: 15, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>
-              {seleccionados.length} seleccionado{seleccionados.length !== 1 ? "s" : ""}
-            </span>
-            <button onClick={() => setSeleccion({})} style={{ fontFamily: inter, fontSize: 13, color: C.gris, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Limpiar</button>
-            <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
-              <button onClick={copiar} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8 }}>
-                {copiado ? <><Check size={15} color={C.verde} /> Copiado</> : <><Copy size={15} /> Copiar</>}
-              </button>
-              <button onClick={enviarWA} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 18px", borderRadius: 8 }}>
-                <Send size={15} /> Enviar
-              </button>
-            </div>
+          <div style={{ maxWidth: 820, margin: "0 auto" }}>
+            {confirmando ? (
+              /* Paso de confirmación: recién acá se borran, si Dani confirma que lo mandó */
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco, lineHeight: 1.4 }}>
+                  ¿Enviaste el mensaje por WhatsApp? Al confirmar, estos jugadores se quitan de la lista.
+                </span>
+                <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
+                  <button onClick={() => setConfirmando(false)} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8 }}>
+                    No, volver
+                  </button>
+                  <button onClick={confirmarEnviado} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.verde, border: "none", padding: "11px 18px", borderRadius: 8 }}>
+                    <Check size={15} /> Sí, lo mandé
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontFamily: oswald, fontSize: 15, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>
+                  {seleccionados.length} seleccionado{seleccionados.length !== 1 ? "s" : ""}
+                </span>
+                <button onClick={() => setSeleccion({})} style={{ fontFamily: inter, fontSize: 13, color: C.gris, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Limpiar</button>
+                <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
+                  <button onClick={copiar} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8 }}>
+                    {copiado ? <><Check size={15} color={C.verde} /> Copiado</> : <><Copy size={15} /> Copiar</>}
+                  </button>
+                  <button onClick={enviarWA} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 18px", borderRadius: 8 }}>
+                    <Send size={15} /> Enviar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
