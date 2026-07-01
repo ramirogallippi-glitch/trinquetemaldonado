@@ -156,6 +156,24 @@ export default function PanelPage() {
     })
   })()
 
+  // Separar en "listos para armar" (2 del + 2 zag) e "incompletos"
+  const esListo = (g: Grupo) => {
+    const del = g.jugadores.filter(j => /delantero/i.test(j.posicion)).length
+    const zag = g.jugadores.filter(j => /zaguero/i.test(j.posicion)).length
+    return del >= 2 && zag >= 2
+  }
+  const listos = grupos.filter(esListo)
+  const incompletos = grupos.filter(g => !esListo(g))
+
+  // Aviso "faltan jugadores" por WhatsApp (Dani lo manda al grupo)
+  const avisarFaltan = (g: Grupo, fd: number, fz: number) => {
+    const partes: string[] = []
+    if (fd) partes.push(`${fd} delantero${fd > 1 ? "s" : ""}`)
+    if (fz) partes.push(`${fz} zaguero${fz > 1 ? "s" : ""}`)
+    const msg = `¡Faltan jugadores para armar un partido de pelota paleta! 🎾\n${fechaCompleta(g.fechaJugar)} · ${g.turno}\nNecesitamos ${partes.join(" y ")}. ¡Anótense en la web!`
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank")
+  }
+
   const toggle = (j: Jugador) => {
     setSeleccion(prev => {
       const n = { ...prev }
@@ -199,6 +217,71 @@ export default function PanelPage() {
     setAnotados(prev => prev.filter(a => !fuera[`${a.nombre}__${a.telefono}`]))
     setSeleccion({})
     setConfirmando(false)
+  }
+
+  // Dibuja la tarjeta de un grupo (día + horario)
+  const renderGrupo = (g: Grupo) => {
+    const del = g.jugadores.filter(j => /delantero/i.test(j.posicion))
+    const zag = g.jugadores.filter(j => /zaguero/i.test(j.posicion))
+    const otros = g.jugadores.filter(j => !/delantero|zaguero/i.test(j.posicion))
+    const listo = del.length >= 2 && zag.length >= 2
+    const faltanDel = Math.max(0, 2 - del.length)
+    const faltanZag = Math.max(0, 2 - zag.length)
+    const faltanTxt = [faltanDel ? `${faltanDel} delantero${faltanDel > 1 ? "s" : ""}` : null, faltanZag ? `${faltanZag} zaguero${faltanZag > 1 ? "s" : ""}` : null].filter(Boolean).join(" y ")
+    const Col = ({ titulo, arr }: { titulo: string; arr: Jugador[] }) => (
+      arr.length === 0 ? null : (
+        <div style={{ flex: 1, minWidth: isMobile ? "100%" : 220 }}>
+          <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: C.amarillo, marginBottom: 10 }}>{titulo} · {arr.length}</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {arr.map(j => {
+              const sel = !!seleccion[j.key]
+              return (
+                <div key={j.key} onClick={() => toggle(j)} role="button" tabIndex={0}
+                  style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                    background: sel ? "rgba(255,211,0,0.14)" : "#0d0d0d", border: `1.5px solid ${sel ? C.amarillo : C.cardBorde}`,
+                    borderRadius: 9, padding: "10px 12px", transition: "all 0.15s" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                    <span style={{ width: 18, height: 18, flexShrink: 0, borderRadius: 5, border: `1.5px solid ${sel ? C.amarillo : C.grisTenue}`, background: sel ? C.amarillo : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {sel && <Check size={13} color={C.negro} strokeWidth={3} />}
+                    </span>
+                    <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: C.blanco, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
+                    <span style={{ flexShrink: 0, fontFamily: inter, fontSize: 10, fontWeight: 700, color: C.amarillo, border: `1px solid ${C.amarillo}55`, borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>{j.categoria}</span>
+                  </span>
+                  <a href={`https://wa.me/${String(j.telefono).replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                    style={{ flexShrink: 0, fontFamily: inter, fontSize: 12, color: C.gris, textDecoration: "underline", whiteSpace: "nowrap" }}>{j.telefono}</a>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )
+    )
+    return (
+      <div key={g.clave} style={{ background: C.card, border: `1px solid ${listo ? C.verde : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 16 : 22 }}>
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.amarillo, marginBottom: 8 }}>Disponibles</p>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: isMobile ? 19 : 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>
+            <Calendar size={18} color={C.amarillo} /> {fechaCompleta(g.fechaJugar)}
+          </span>
+          <p style={{ fontFamily: inter, fontSize: 14.5, color: C.blanco, margin: 0 }}>
+            <span style={{ color: C.amarillo, fontWeight: 600 }}>Horario:</span> {g.turno} <span style={{ color: C.grisTenue }}>· {g.jugadores.length} disponible{g.jugadores.length !== 1 ? "s" : ""}</span>
+          </p>
+        </div>
+        {!listo && (
+          <div style={{ marginBottom: 16, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.cardBorde}`, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: inter, fontSize: 13.5, color: C.gris }}>Faltan <strong style={{ color: C.blanco }}>{faltanTxt}</strong> para armar</span>
+            <button onClick={() => avisarFaltan(g, faltanDel, faltanZag)} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: oswald, fontSize: 12.5, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "9px 14px", borderRadius: 7 }}>
+              <Send size={13} /> Avisar que faltan
+            </button>
+          </div>
+        )}
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <Col titulo="Delanteros" arr={del} />
+          <Col titulo="Zagueros" arr={zag} />
+          <Col titulo="Sin posición" arr={otros} />
+        </div>
+      </div>
+    )
   }
 
   /* ── Pantalla de contraseña ── */
@@ -258,62 +341,30 @@ export default function PanelPage() {
             <p style={{ fontFamily: inter, fontSize: 15, color: C.gris }}>Todavía no hay nadie anotado.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 28 }}>
-            {grupos.map(g => {
-              const del = g.jugadores.filter(j => /delantero/i.test(j.posicion))
-              const zag = g.jugadores.filter(j => /zaguero/i.test(j.posicion))
-              const otros = g.jugadores.filter(j => !/delantero|zaguero/i.test(j.posicion))
-              const listo = del.length >= 2 && zag.length >= 2
-              const Col = ({ titulo, arr }: { titulo: string; arr: Jugador[] }) => (
-                arr.length === 0 ? null : (
-                  <div style={{ flex: 1, minWidth: isMobile ? "100%" : 220 }}>
-                    <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: C.amarillo, marginBottom: 10 }}>{titulo} · {arr.length}</p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      {arr.map(j => {
-                        const sel = !!seleccion[j.key]
-                        return (
-                          <div key={j.key} onClick={() => toggle(j)} role="button" tabIndex={0}
-                            style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-                              background: sel ? "rgba(255,211,0,0.14)" : "#0d0d0d", border: `1.5px solid ${sel ? C.amarillo : C.cardBorde}`,
-                              borderRadius: 9, padding: "10px 12px", transition: "all 0.15s" }}>
-                            <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                              <span style={{ width: 18, height: 18, flexShrink: 0, borderRadius: 5, border: `1.5px solid ${sel ? C.amarillo : C.grisTenue}`, background: sel ? C.amarillo : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                {sel && <Check size={13} color={C.negro} strokeWidth={3} />}
-                              </span>
-                              <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: C.blanco, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
-                              <span style={{ flexShrink: 0, fontFamily: inter, fontSize: 10, fontWeight: 700, color: C.amarillo, border: `1px solid ${C.amarillo}55`, borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>{j.categoria}</span>
-                            </span>
-                            <a href={`https://wa.me/${String(j.telefono).replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                              style={{ flexShrink: 0, fontFamily: inter, fontSize: 12, color: C.gris, textDecoration: "underline", whiteSpace: "nowrap" }}>{j.telefono}</a>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              )
-              return (
-                <div key={g.clave} style={{ background: C.card, border: `1px solid ${listo ? C.verde : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 16 : 22 }}>
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
-                      <p style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: C.amarillo }}>Disponibles</p>
-                      {listo && <span style={{ fontFamily: inter, fontSize: 11, fontWeight: 700, color: C.negro, background: C.verde, padding: "4px 11px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap" }}>✓ Hay para armar</span>}
-                    </div>
-                    <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: isMobile ? 19 : 22, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>
-                      <Calendar size={18} color={C.amarillo} /> {fechaCompleta(g.fechaJugar)}
-                    </span>
-                    <p style={{ fontFamily: inter, fontSize: 14.5, color: C.blanco, margin: 0 }}>
-                      <span style={{ color: C.amarillo, fontWeight: 600 }}>Horario:</span> {g.turno} <span style={{ color: C.grisTenue }}>· {g.jugadores.length} disponible{g.jugadores.length !== 1 ? "s" : ""}</span>
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                    <Col titulo="Delanteros" arr={del} />
-                    <Col titulo="Zagueros" arr={zag} />
-                    <Col titulo="Sin posición" arr={otros} />
-                  </div>
+          <div style={{ marginTop: 28 }}>
+            {/* Sección: LISTOS PARA ARMAR */}
+            {listos.length > 0 && (
+              <div style={{ marginBottom: 36 }}>
+                <h2 style={{ fontFamily: oswald, fontSize: 18, fontWeight: 700, textTransform: "uppercase", color: C.verde, letterSpacing: "0.05em", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Check size={20} color={C.verde} /> Listos para armar
+                </h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {listos.map(renderGrupo)}
                 </div>
-              )
-            })}
+              </div>
+            )}
+
+            {/* Sección: ESPERANDO MÁS JUGADORES */}
+            {incompletos.length > 0 && (
+              <div>
+                <h2 style={{ fontFamily: oswald, fontSize: 18, fontWeight: 700, textTransform: "uppercase", color: C.grisTenue, letterSpacing: "0.05em", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Clock size={18} color={C.grisTenue} /> Esperando más jugadores
+                </h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {incompletos.map(renderGrupo)}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
