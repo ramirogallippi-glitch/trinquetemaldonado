@@ -132,9 +132,13 @@ export default function DesafiosPage() {
       setError("Completá los dos jugadores con sus teléfonos, categoría, fecha y turno.")
       return
     }
+    const fechaFmt = fecha.split("-").reverse().join("/")
+    if (reservados.has(`${fechaFmt}|${String(turno).trim()}`)) {
+      setError("Este turno ya fue reservado. Por favor, elegí otro horario.")
+      return
+    }
     setError("")
     setEnviando(true)
-    const fechaFmt = fecha.split("-").reverse().join("/")
     const id = String(Date.now())
     const payload: Desafio = { id, jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2, estado: "abierto", rival1: "", rival2: "" }
     try {
