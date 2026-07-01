@@ -158,6 +158,10 @@ export default function DesafiosPage() {
       setErrorAceptar("Completá los nombres de los dos jugadores de tu dupla.")
       return
     }
+    if (reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)) {
+      setErrorAceptar("Este turno ya fue reservado. Por favor, elegí otro horario.")
+      return
+    }
     setErrorAceptar("")
     // 1) Abrir WhatsApp PRIMERO (en el toque directo, clave para que funcione en iPhone)
     const msg =
@@ -317,7 +321,6 @@ export default function DesafiosPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {desafios.map((d) => {
               const completo = d.estado === "completo"
-              const reservado = !completo && reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)
               return (
                 <div key={d.id} style={{ background: C.card, border: `1px solid ${completo ? "#6B8F71" : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22 }}>
                   {completo ? (
@@ -362,11 +365,7 @@ export default function DesafiosPage() {
                           <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 13.5, color: C.gris }}><Clock size={15} color={C.amarillo} /> {d.turno}</span>
                         </div>
                       </div>
-                      {reservado ? (
-                        <span style={{ fontFamily: oswald, fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, color: C.gris, background: "rgba(255,255,255,0.06)", border: `1.5px solid ${C.cardBorde}`, padding: "12px 20px", borderRadius: 8, whiteSpace: "nowrap", textAlign: "center" }}>
-                          🔒 Turno reservado
-                        </span>
-                      ) : aceptandoId !== d.id && (
+                      {aceptandoId !== d.id && (
                         <button onClick={() => { setAceptandoId(d.id); setRival1(""); setRival2(""); setErrorAceptar("") }} style={{
                           fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700,
                           cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 22px", borderRadius: 8,
