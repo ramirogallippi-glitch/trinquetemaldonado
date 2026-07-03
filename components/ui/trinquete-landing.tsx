@@ -257,6 +257,8 @@ const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 // Planilla de Google (Apps Script) donde se guardan los anotados
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
+// Agenda de la cancha (turnos ocupados)
+const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx3gnqeM00tKwYye3D2sk3_ipEAgoabR3JyJ0rIQXZ6QmDIB44d/exec"
 
 export function PaletaSection() {
   const isMobile = useIsMobile()
@@ -269,6 +271,16 @@ export function PaletaSection() {
   const [error, setError] = useState("")
   const [enviando, setEnviando] = useState(false)
   const [sent, setSent] = useState(false)
+  const [reservados, setReservados] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    fetch(RESERVAS_URL)
+      .then(r => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setReservados(new Set(data.map((r: any) => `${String(r.fecha).trim()}|${String(r.turno).trim()}`)))
+      })
+      .catch(() => {})
+  }, [])
 
   const toggle = (arr: string[], set: (v: string[]) => void, val: string) =>
     set(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
@@ -276,6 +288,12 @@ export function PaletaSection() {
   const enviar = async () => {
     if (!nombre.trim() || !telefono.trim() || !posicion || !categoria || !fecha || turnos.length === 0) {
       setError("Completá tu nombre, teléfono, posición, categoría, la fecha y al menos un turno.")
+      return
+    }
+    const fechaFmt = fecha.split("-").reverse().join("/")
+    const turnosReservados = turnos.filter(t => reservados.has(`${fechaFmt}|${String(t).trim()}`))
+    if (turnosReservados.length > 0) {
+      setError(`El turno ${turnosReservados.join(", ")} del ${fechaFmt} ya está reservado. Por favor, elegí otro horario.`)
       return
     }
     setError("")
