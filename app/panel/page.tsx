@@ -140,6 +140,11 @@ export default function PanelPage() {
     } catch {}
     cargar()
     cargarReservas()
+    // refresco automático cada 20s (mantiene anotados y reservas al día entre dispositivos)
+    const iv = setInterval(() => { cargar(); cargarReservas() }, 20000)
+    const onFocus = () => { cargar(); cargarReservas() }
+    window.addEventListener("focus", onFocus)
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus) }
   }, [unlocked])
 
   const cargarReservas = () => {
@@ -249,6 +254,18 @@ export default function PanelPage() {
     setConfirmando(false)
   }
 
+  // Liberar un turno reservado (si el partido se canceló)
+  const liberarTurno = (fechaJugar: string, turno: string) => {
+    if (!confirm("¿Liberar este turno? Va a quedar disponible de nuevo para armar o desafiar.")) return
+    const f = fechaDMY(fechaJugar)
+    fetch(RESERVAS_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "liberar", fecha: f, turno }),
+    }).catch(() => {})
+    setReservados(prev => { const n = new Set(prev); n.delete(`${f}|${String(turno).trim()}`); return n })
+  }
+
   // Dibuja la tarjeta de un grupo (día + horario)
   const renderGrupo = (g: Grupo) => {
     const del = g.jugadores.filter(j => /delantero/i.test(j.posicion))
@@ -302,8 +319,11 @@ export default function PanelPage() {
           </p>
         </div>
         {reservado && (
-          <div style={{ marginBottom: 16, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.cardBorde}`, borderRadius: 9 }}>
-            <span style={{ fontFamily: inter, fontSize: 13.5, color: C.gris }}>Este turno ya tiene un partido armado. No se puede usar de nuevo.</span>
+          <div style={{ marginBottom: 16, padding: "12px 14px", background: "rgba(255,255,255,0.03)", border: `1px solid ${C.cardBorde}`, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: inter, fontSize: 13.5, color: C.gris }}>Este turno ya tiene un partido armado.</span>
+            <button onClick={() => liberarTurno(g.fechaJugar, g.turno)} style={{ fontFamily: oswald, fontSize: 12.5, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "8px 14px", borderRadius: 7 }}>
+              Liberar turno
+            </button>
           </div>
         )}
         {!listo && !reservado && (

@@ -123,7 +123,14 @@ export default function DesafiosPage() {
       .catch(() => {})
   }
 
-  useEffect(() => { cargarDesafios(); cargarReservas() }, [])
+  useEffect(() => {
+    cargarDesafios(); cargarReservas()
+    // refresco automático cada 20s (desafíos y reservas al día entre dispositivos)
+    const iv = setInterval(() => { cargarDesafios(); cargarReservas() }, 20000)
+    const onFocus = () => { cargarDesafios(); cargarReservas() }
+    window.addEventListener("focus", onFocus)
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus) }
+  }, [])
 
   const hoyStr = (() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()
 
@@ -160,6 +167,12 @@ export default function DesafiosPage() {
   const confirmarAceptar = (d: Desafio) => {
     if (!rival1.trim() || !rival2.trim()) {
       setErrorAceptar("Completá los nombres de los dos jugadores de tu dupla.")
+      return
+    }
+    // ¿alguien ya lo aceptó? (según lo último cargado)
+    const actual = desafios.find(x => x.id === d.id)
+    if (actual && actual.estado === "completo") {
+      setErrorAceptar("Otra dupla ya aceptó este desafío. Elegí otro.")
       return
     }
     if (reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)) {
