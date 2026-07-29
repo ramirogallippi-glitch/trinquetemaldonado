@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Swords, Calendar, Clock, Trophy, Plus, X, Send, Trash2 } from "lucide-react"
+import { Swords, Calendar, Clock, Trophy, Plus, X, Send, Trash2, Check } from "lucide-react"
 
 /* ── Paleta ── */
 const C = {
@@ -154,6 +154,8 @@ export default function DesafiosPage() {
   const [rivalTel1, setRivalTel1] = useState("")
   const [rivalTel2, setRivalTel2] = useState("")
   const [errorAceptar, setErrorAceptar] = useState("")
+  // paso 2 del aceptar: WhatsApp ya abierto, esperando que el usuario confirme que lo mandó
+  const [confirmandoAceptarId, setConfirmandoAceptarId] = useState<string | null>(null)
 
   const cargarDesafios = () => {
     fetch(DESAFIOS_URL)
@@ -218,23 +220,29 @@ export default function DesafiosPage() {
     setTimeout(cargarDesafios, 2000)
   }
 
-  const confirmarAceptar = (d: Desafio) => {
+  // Chequea que el desafío se pueda aceptar (nadie lo tomó, turno libre). Devuelve true si está OK.
+  const puedeAceptar = (d: Desafio): boolean => {
+    const actual = desafios.find(x => x.id === d.id)
+    if (actual && actual.estado === "completo") {
+      setErrorAceptar("Otra dupla ya aceptó este desafío. Elegí otro.")
+      return false
+    }
+    if (reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)) {
+      setErrorAceptar("Este turno ya fue reservado. Por favor, elegí otro horario.")
+      return false
+    }
+    return true
+  }
+
+  // PASO 1: abre WhatsApp con el mensaje para Dani. NO confirma nada todavía.
+  const abrirWhatsAppAceptar = (d: Desafio) => {
     if (!rival1.trim() || !rival2.trim() || !rivalTel1.trim() || !rivalTel2.trim()) {
       setErrorAceptar("Completá el nombre y el teléfono de los dos jugadores de tu dupla.")
       return
     }
-    // ¿alguien ya lo aceptó? (según lo último cargado)
-    const actual = desafios.find(x => x.id === d.id)
-    if (actual && actual.estado === "completo") {
-      setErrorAceptar("Otra dupla ya aceptó este desafío. Elegí otro.")
-      return
-    }
-    if (reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)) {
-      setErrorAceptar("Este turno ya fue reservado. Por favor, elegí otro horario.")
-      return
-    }
+    if (!puedeAceptar(d)) return
     setErrorAceptar("")
-    // 1) Abrir WhatsApp PRIMERO (en el toque directo, clave para que funcione en iPhone)
+    // Abrir WhatsApp en el toque directo (clave para que funcione en iPhone)
     const msg =
       `Hola! Se armó un partido de pelota paleta\n\n` +
       `${d.jugador1} y ${d.jugador2} VS ${rival1} y ${rival2}\n` +
@@ -247,13 +255,21 @@ export default function DesafiosPage() {
       `${rival1}: ${rivalTel1}\n` +
       `${rival2}: ${rivalTel2}`
     window.open(`https://wa.me/${DANI_WA}?text=${encodeURIComponent(msg)}`, "_blank")
-    // 2) Guardar en la planilla (sin esperar, así no bloquea la apertura de WhatsApp)
+    // Pasar al paso de confirmación (todavía NO se guarda nada)
+    setConfirmandoAceptarId(d.id)
+  }
+
+  // PASO 2: el usuario confirma que efectivamente mandó el mensaje. RECIÉN ACÁ se arma el partido.
+  const confirmarEnviadoAceptar = (d: Desafio) => {
+    if (!puedeAceptar(d)) { setConfirmandoAceptarId(null); return }
+    setErrorAceptar("")
+    // Guardar en la planilla (marca el desafío como completo)
     fetch(DESAFIOS_URL, {
       method: "POST", mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2, rivalTel1, rivalTel2 }),
     }).catch(() => {})
-    // 3) reservar el turno en la agenda de la cancha
+    // Reservar el turno en la agenda de la cancha
     const claveReserva = `${formatFecha(d.fecha)}|${String(d.turno).trim()}`
     fetch(RESERVAS_URL, {
       method: "POST", mode: "no-cors",
@@ -261,11 +277,15 @@ export default function DesafiosPage() {
       body: JSON.stringify({ action: "reservar", fecha: formatFecha(d.fecha), turno: d.turno }),
     }).catch(() => {})
     setReservados(prev => new Set(prev).add(claveReserva))
-    // 4) optimista: marco el partido como completo
+    // Optimista: marco el partido como completo
     setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2, rivalTel1, rivalTel2 } : x))
-    setAceptandoId(null); setRival1(""); setRival2(""); setRivalTel1(""); setRivalTel2("")
+    setAceptandoId(null); setConfirmandoAceptarId(null)
+    setRival1(""); setRival2(""); setRivalTel1(""); setRivalTel2("")
     setTimeout(() => { cargarDesafios(); cargarReservas() }, 2000)
   }
+
+  // Volver atrás desde el paso de confirmación (el usuario NO mandó el mensaje / se arrepintió)
+  const cancelarAceptar = () => { setAceptandoId(null); setConfirmandoAceptarId(null); setErrorAceptar("") }
 
   const inputStyle: React.CSSProperties = {
     width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco,
@@ -458,7 +478,7 @@ export default function DesafiosPage() {
                         </div>
                       </div>
                       {aceptandoId !== d.id && (
-                        <button onClick={() => { setAceptandoId(d.id); setRival1(""); setRival2(""); setErrorAceptar("") }} style={{
+                        <button onClick={() => { setAceptandoId(d.id); setConfirmandoAceptarId(null); setRival1(""); setRival2(""); setRivalTel1(""); setRivalTel2(""); setErrorAceptar("") }} style={{
                           fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700,
                           cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 22px", borderRadius: 8,
                           display: "flex", alignItems: "center", justifyContent: "center", gap: 8, whiteSpace: "nowrap",
@@ -469,8 +489,8 @@ export default function DesafiosPage() {
                     </div>
                   )}
 
-                  {/* Mini-form para aceptar */}
-                  {!completo && aceptandoId === d.id && (
+                  {/* Mini-form para aceptar (PASO 1: cargar rivales y avisar por WhatsApp) */}
+                  {!completo && aceptandoId === d.id && confirmandoAceptarId !== d.id && (
                     <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.cardBorde}` }}>
                       <p style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu dupla (los rivales)</p>
                       <input value={rival1} onChange={e => setRival1(e.target.value)} placeholder="Jugador 1 (nombre)" style={inputStyle} />
@@ -479,11 +499,30 @@ export default function DesafiosPage() {
                       <input value={rivalTel2} onChange={e => setRivalTel2(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${rival2 || "Jugador 2"}`} style={{ ...inputStyle, marginBottom: 14 }} />
                       {errorAceptar && <p style={{ fontFamily: inter, fontSize: 12.5, color: "#ff6b6b", marginBottom: 12 }}>{errorAceptar}</p>}
                       <div style={{ display: "flex", gap: 10 }}>
-                        <button onClick={() => confirmarAceptar(d)} style={{ flex: 1, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "13px", borderRadius: 8 }}>
-                          Confirmar partido
+                        <button onClick={() => abrirWhatsAppAceptar(d)} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "13px", borderRadius: 8 }}>
+                          <Send size={15} /> Avisar a Dani por WhatsApp
                         </button>
-                        <button onClick={() => setAceptandoId(null)} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "13px 18px", borderRadius: 8 }}>
+                        <button onClick={cancelarAceptar} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "13px 18px", borderRadius: 8 }}>
                           Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PASO 2: confirmar que el mensaje se envió (recién acá se arma el partido) */}
+                  {!completo && confirmandoAceptarId === d.id && (
+                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.cardBorde}` }}>
+                      <p style={{ fontFamily: oswald, fontSize: 15, textTransform: "uppercase", color: C.amarillo, marginBottom: 8 }}>¿Le mandaste el mensaje a Dani?</p>
+                      <p style={{ fontFamily: inter, fontSize: 13.5, color: C.gris, lineHeight: 1.6, marginBottom: 14 }}>
+                        Confirmá <strong style={{ color: C.blanco }}>solo si ya enviaste el mensaje</strong> por WhatsApp. Al confirmar, el partido queda armado y el turno reservado. Si todavía no lo mandaste, tocá "Todavía no".
+                      </p>
+                      {errorAceptar && <p style={{ fontFamily: inter, fontSize: 12.5, color: "#ff6b6b", marginBottom: 12 }}>{errorAceptar}</p>}
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        <button onClick={() => confirmarEnviadoAceptar(d)} style={{ flex: 1, minWidth: 160, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: "#6B8F71", border: "none", padding: "13px", borderRadius: 8 }}>
+                          <Check size={15} /> Sí, ya lo mandé
+                        </button>
+                        <button onClick={() => setConfirmandoAceptarId(null)} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "13px 18px", borderRadius: 8 }}>
+                          Todavía no
                         </button>
                       </div>
                     </div>
