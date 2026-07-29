@@ -101,6 +101,17 @@ export default function DesafiosPage() {
     } else { window.alert("Clave incorrecta") }
   }
   const salirAdmin = () => { localStorage.removeItem("trinquete_desafios_admin"); setAdmin(false) }
+  // Libera la cancha de un desafío que tenía turno reservado (solo los "completo" reservan)
+  const liberarReservaDe = (d: Desafio) => {
+    if (d.estado !== "completo") return
+    const f = formatFecha(d.fecha)
+    fetch(RESERVAS_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "liberar", fecha: f, turno: d.turno }),
+    }).catch(() => {})
+    setReservados(prev => { const n = new Set(prev); n.delete(`${f}|${String(d.turno).trim()}`); return n })
+  }
   const borrarDesafio = (d: Desafio) => {
     if (!window.confirm(`¿Borrar el partido de ${d.jugador1} y ${d.jugador2}? No se puede deshacer.`)) return
     fetch(DESAFIOS_URL, {
@@ -108,6 +119,7 @@ export default function DesafiosPage() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "borrar", id: d.id }),
     }).catch(() => {})
+    liberarReservaDe(d)   // si tenía cancha reservada, la libera para que no quede huérfana
     setDesafios(prev => prev.filter(x => x.id !== d.id))
   }
   const borrarTodos = () => {
@@ -119,6 +131,7 @@ export default function DesafiosPage() {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "borrar", id: d.id }),
       }).catch(() => {})
+      liberarReservaDe(d)   // libera la cancha de los que estaban completos
     })
     setDesafios([])
   }

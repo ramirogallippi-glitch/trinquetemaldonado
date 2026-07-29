@@ -266,6 +266,17 @@ export default function PanelPage() {
     setReservados(prev => { const n = new Set(prev); n.delete(`${f}|${String(turno).trim()}`); return n })
   }
 
+  // Lista de TODOS los turnos reservados (lee directo de la planilla), ordenada por fecha y horario.
+  // Es la "red de seguridad": muestra hasta las reservas que no tienen un partido visible detrás.
+  const listaReservas = Array.from(reservados)
+    .map(k => { const i = k.indexOf("|"); return { fecha: k.slice(0, i), turno: k.slice(i + 1) } })
+    .filter(r => r.fecha)
+    .sort((a, b) => {
+      const ka = a.fecha.split("/").reverse().join("")
+      const kb = b.fecha.split("/").reverse().join("")
+      return ka === kb ? a.turno.localeCompare(b.turno) : ka.localeCompare(kb)
+    })
+
   // Dibuja la tarjeta de un grupo (día + horario)
   const renderGrupo = (g: Grupo) => {
     const del = g.jugadores.filter(j => /delantero/i.test(j.posicion))
@@ -426,6 +437,38 @@ export default function PanelPage() {
             )}
           </div>
         )}
+
+        {/* Sección: AGENDA · TURNOS RESERVADOS (red de seguridad, siempre visible) */}
+        <div style={{ marginTop: 44, paddingTop: 32, borderTop: `1px solid ${C.cardBorde}` }}>
+          <h2 style={{ fontFamily: oswald, fontSize: 18, fontWeight: 700, textTransform: "uppercase", color: C.amarillo, letterSpacing: "0.05em", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+            <Calendar size={18} color={C.amarillo} /> Agenda · Turnos reservados
+          </h2>
+          <p style={{ fontFamily: inter, fontSize: 13.5, color: C.gris, marginBottom: 18, maxWidth: 560, lineHeight: 1.6 }}>
+            Todos los turnos con la cancha ocupada. Si un partido se canceló o quedó viejo, tocá <strong style={{ color: C.blanco }}>Liberar</strong> y el turno vuelve a estar disponible para anotarse o desafiar.
+          </p>
+          {listaReservas.length === 0 ? (
+            <div style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 12, padding: "22px 18px", textAlign: "center" }}>
+              <p style={{ fontFamily: inter, fontSize: 14, color: C.gris, margin: 0 }}>No hay ningún turno reservado.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {listaReservas.map(r => (
+                <div key={`${r.fecha}|${r.turno}`} style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 11, padding: isMobile ? "12px 14px" : "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                    <span style={{ fontSize: 15 }}>🔒</span>
+                    <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                      <span style={{ fontFamily: oswald, fontSize: 15.5, fontWeight: 700, textTransform: "uppercase", color: C.blanco }}>{fechaCompleta(r.fecha)}</span>
+                      <span style={{ fontFamily: inter, fontSize: 13, color: C.gris }}>{r.turno}</span>
+                    </span>
+                  </span>
+                  <button onClick={() => liberarTurno(r.fecha, r.turno)} style={{ flexShrink: 0, fontFamily: oswald, fontSize: 12.5, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "9px 16px", borderRadius: 7 }}>
+                    Liberar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Barra flotante de selección */}
