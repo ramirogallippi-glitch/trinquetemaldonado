@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Swords, Calendar, Clock, Trophy, Plus, X, Send } from "lucide-react"
+import { Swords, Calendar, Clock, Trophy, Plus, X, Send, Trash2 } from "lucide-react"
 
 /* ── Paleta ── */
 const C = {
@@ -27,6 +27,8 @@ const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 const DANI_WA = "5491141626719"
 // Contraseña para entrar al muro (cambiala por la que quieras que use el club)
 const CLAVE = "trinquete2026"
+// Contraseña de ADMIN (SOLO Dani) para borrar partidos. Cambiala por la que quieras.
+const CLAVE_ADMIN = "dani2026"
 
 interface Desafio {
   id: string
@@ -79,6 +81,41 @@ export default function DesafiosPage() {
       localStorage.setItem("trinquete_desafios_ok", "1")
       setUnlocked(true); setClaveError(false)
     } else { setClaveError(true) }
+  }
+
+  // Modo admin (SOLO Dani): puede borrar partidos
+  const [admin, setAdmin] = useState(false)
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("trinquete_desafios_admin") === "1") setAdmin(true)
+  }, [])
+  const activarAdmin = () => {
+    const c = window.prompt("Clave de administrador (Dani):")
+    if (c == null) return
+    if (c.trim().toLowerCase() === CLAVE_ADMIN.toLowerCase()) {
+      localStorage.setItem("trinquete_desafios_admin", "1"); setAdmin(true)
+    } else { window.alert("Clave incorrecta") }
+  }
+  const salirAdmin = () => { localStorage.removeItem("trinquete_desafios_admin"); setAdmin(false) }
+  const borrarDesafio = (d: Desafio) => {
+    if (!window.confirm(`¿Borrar el partido de ${d.jugador1} y ${d.jugador2}? No se puede deshacer.`)) return
+    fetch(DESAFIOS_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "borrar", id: d.id }),
+    }).catch(() => {})
+    setDesafios(prev => prev.filter(x => x.id !== d.id))
+  }
+  const borrarTodos = () => {
+    if (!desafios.length) return
+    if (!window.confirm(`¿Borrar TODOS los partidos (${desafios.length})? No se puede deshacer.`)) return
+    desafios.forEach(d => {
+      fetch(DESAFIOS_URL, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "borrar", id: d.id }),
+      }).catch(() => {})
+    })
+    setDesafios([])
   }
 
   // form
@@ -282,9 +319,16 @@ export default function DesafiosPage() {
         )}
 
         {/* Muro */}
-        <h2 style={{ fontFamily: oswald, fontSize: 20, fontWeight: 700, textTransform: "uppercase", color: C.amarillo, marginBottom: 18, letterSpacing: "0.05em" }}>
-          Desafíos
-        </h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
+          <h2 style={{ fontFamily: oswald, fontSize: 20, fontWeight: 700, textTransform: "uppercase", color: C.amarillo, letterSpacing: "0.05em", margin: 0 }}>
+            Desafíos
+          </h2>
+          {admin && desafios.length > 0 && (
+            <button onClick={borrarTodos} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: oswald, fontSize: 12, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: "#ff6b6b", background: "transparent", border: "1.5px solid #ff6b6b55", borderRadius: 8, padding: "8px 14px" }}>
+              <Trash2 size={14} /> Borrar todos
+            </button>
+          )}
+        </div>
 
         {cargando ? (
           <p style={{ fontFamily: inter, color: C.gris, textAlign: "center", padding: "30px 0" }}>Cargando…</p>
@@ -299,6 +343,13 @@ export default function DesafiosPage() {
               const completo = d.estado === "completo"
               return (
                 <div key={d.id} style={{ background: C.card, border: `1px solid ${completo ? "#6B8F71" : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22 }}>
+                  {admin && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+                      <button onClick={() => borrarDesafio(d)} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: oswald, fontSize: 12, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: "#ff6b6b", background: "transparent", border: "1.5px solid #ff6b6b55", borderRadius: 8, padding: "7px 12px" }}>
+                        <Trash2 size={14} /> Borrar
+                      </button>
+                    </div>
+                  )}
                   {completo ? (
                     /* ── PARTIDO ARMADO 2 vs 2 ── */
                     <div>
@@ -375,6 +426,16 @@ export default function DesafiosPage() {
             })}
           </div>
         )}
+
+        <div style={{ textAlign: "center", marginTop: 44 }}>
+          {admin ? (
+            <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, margin: 0 }}>
+              🔧 Modo admin activo · <span onClick={salirAdmin} style={{ color: C.amarillo, cursor: "pointer", textDecoration: "underline" }}>salir</span>
+            </p>
+          ) : (
+            <button onClick={activarAdmin} style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Modo admin</button>
+          )}
+        </div>
       </div>
     </main>
   )
