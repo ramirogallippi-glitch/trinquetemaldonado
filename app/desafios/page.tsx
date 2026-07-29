@@ -299,14 +299,16 @@ export default function DesafiosPage() {
 
       <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobile ? "40px 18px 80px" : "64px 24px 100px" }}>
         {/* Encabezado */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <Swords size={isMobile ? 26 : 32} color={C.amarillo} />
-            <h1 style={{ fontFamily: anton, fontSize: "clamp(34px, 9vw, 60px)", textTransform: "uppercase", lineHeight: 1, color: C.blanco }}>
-              Muro de Desafíos
-            </h1>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <span style={{ width: 24, height: 2, background: C.amarillo, display: "inline-block" }} />
+            <span style={{ fontFamily: oswald, fontSize: 11.5, letterSpacing: "0.28em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Pelota Paleta · 2 vs 2</span>
+            <span style={{ width: 24, height: 2, background: C.amarillo, display: "inline-block" }} />
           </div>
-          <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 480, margin: "0 auto" }}>
+          <h1 style={{ fontFamily: anton, fontSize: "clamp(34px, 9vw, 60px)", textTransform: "uppercase", lineHeight: 1, color: C.blanco, margin: 0 }}>
+            Muro de <span style={{ color: C.amarillo }}>Desafíos</span>
+          </h1>
+          <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 480, margin: "18px auto 0" }}>
             Publicá tu desafío con tu dupla y elegí día y horario. Otra dupla lo acepta y se arma el partido.
           </p>
         </div>

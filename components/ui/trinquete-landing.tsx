@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { HeroGeometric } from "./shape-landing-hero"
+import { Marquee } from "./marquee"
 import {
-  Dumbbell, Bike, Target, Clock, MapPin, Phone, AtSign,
+  Dumbbell, Bike, Target, MapPin, Phone, AtSign,
   CheckCircle2, ChevronRight, Send, Droplets, Swords, UserPlus,
 } from "lucide-react"
 
@@ -39,8 +40,12 @@ const scrollTo = (id: string) =>
 function SectionTitle({ eyebrow, title, sub }: { eyebrow: string; title: string; sub?: string }) {
   return (
     <div style={{ textAlign: "center", marginBottom: 48 }}>
-      <p style={{ fontFamily: inter, fontSize: 12, letterSpacing: "0.25em", color: C.amarillo, textTransform: "uppercase", fontWeight: 600, marginBottom: 12 }}>{eyebrow}</p>
-      <h2 style={{ fontFamily: oswald, fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 700, textTransform: "uppercase", lineHeight: 1, color: C.blanco }}>{title}</h2>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <span style={{ width: 24, height: 2, background: C.amarillo, display: "inline-block" }} />
+        <span style={{ fontFamily: oswald, fontSize: 11.5, letterSpacing: "0.28em", color: C.amarillo, textTransform: "uppercase", fontWeight: 600 }}>{eyebrow}</span>
+        <span style={{ width: 24, height: 2, background: C.amarillo, display: "inline-block" }} />
+      </div>
+      <h2 style={{ fontFamily: oswald, fontSize: "clamp(32px, 6vw, 56px)", fontWeight: 700, textTransform: "uppercase", lineHeight: 1, color: C.blanco, margin: 0 }}>{title}</h2>
       {sub && <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, maxWidth: 520, margin: "16px auto 0", lineHeight: 1.7 }}>{sub}</p>}
     </div>
   )
@@ -167,7 +172,10 @@ function ServiciosSection({ onAnotarse }: { onAnotarse: () => void }) {
             return (
               <motion.div key={s.titulo}
                 initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-                style={{ position: "relative", background: C.card, border: `1px solid ${s.destacado ? C.amarillo : C.cardBorde}`, borderRadius: 14, padding: 28, overflow: "hidden" }}>
+                whileHover={{ y: -5 }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = C.amarillo}
+                onMouseLeave={e => e.currentTarget.style.borderColor = s.destacado ? C.amarillo : C.cardBorde}
+                style={{ position: "relative", background: C.card, border: `1px solid ${s.destacado ? C.amarillo : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 24 : 30, overflow: "hidden", transition: "border-color 0.2s ease" }}>
                 {s.destacado && (
                   <span style={{ position: "absolute", top: 16, right: 16, fontFamily: inter, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: C.negro, background: C.amarillo, padding: "4px 10px", borderRadius: 999 }}>Destacado</span>
                 )}
@@ -468,62 +476,93 @@ function GaleriaSection() {
 function Footer() {
   const isMobile = useIsMobile()
   return (
-    <footer id="contacto" style={{ background: "#080808", borderTop: `2px solid ${C.amarillo}` }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "56px 20px 40px" : "72px 40px 44px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr 1fr", gap: isMobile ? 36 : 50, marginBottom: 44 }}>
+    <footer id="contacto" style={{ background: "#070707" }}>
+      <div style={{ height: 3, background: C.amarillo }} />
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "56px 20px 36px" : "80px 40px 44px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.5fr 1fr 1fr", gap: isMobile ? 40 : 56, marginBottom: 46 }}>
+
+          {/* Marca */}
           <div>
-            <h3 style={{ fontFamily: oswald, fontSize: 26, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <span style={{ width: 20, height: 2, background: C.amarillo, display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontFamily: oswald, fontSize: 11.5, letterSpacing: "0.26em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Club deportivo · Buenos Aires</span>
+            </div>
+            <h3 style={{ fontFamily: oswald, fontSize: 30, fontWeight: 700, textTransform: "uppercase", color: C.blanco, margin: 0, lineHeight: 1 }}>
               Trinquete <span style={{ color: C.amarillo }}>Maldonado</span>
             </h3>
-            <p style={{ fontFamily: inter, fontSize: 14, color: C.gris, lineHeight: 1.7, maxWidth: 320, marginTop: 12 }}>
-              Gimnasio de barrio con cancha de pelota paleta, musculación y spinning. Vení a entrenar y a jugar.
+            <p style={{ fontFamily: inter, fontSize: 14, color: C.gris, lineHeight: 1.7, maxWidth: 340, margin: "16px 0 24px" }}>
+              Cancha profesional de pelota paleta, musculación y spinning. Un club de barrio para entrenar y jugar.
             </p>
+            <a href={`https://wa.me/${WA}?text=${encodeURIComponent("Hola! Quería consultar por el gimnasio.")}`} target="_blank" rel="noopener noreferrer"
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 700, color: C.negro, background: C.amarillo, padding: "12px 22px", borderRadius: 8, boxShadow: "0 6px 20px rgba(255,211,0,0.25)" }}>
+              <Phone size={16} /> Escribinos por WhatsApp
+            </a>
           </div>
 
+          {/* Horarios */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 18 }}>
-              <Clock size={15} color={C.amarillo} />
-              <p style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.12em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Horarios</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <span style={{ width: 20, height: 2, background: C.amarillo, display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Horarios</span>
             </div>
             {[
               { dia: "Lunes a Viernes", hs: "8:00 – 11:00 · 15:00 – 21:30" },
               { dia: "Sábados", hs: "8:00 – 11:00" },
               { dia: "Domingos", hs: "Cerrado" },
             ].map(({ dia, hs }) => (
-              <div key={dia} style={{ marginBottom: 12 }}>
-                <p style={{ fontFamily: inter, fontSize: 11, color: C.grisTenue, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>{dia}</p>
-                <p style={{ fontFamily: oswald, fontSize: 17, fontWeight: 600, color: hs === "Cerrado" ? C.grisTenue : C.blanco }}>{hs}</p>
+              <div key={dia} style={{ marginBottom: 14 }}>
+                <p style={{ fontFamily: inter, fontSize: 11, color: C.grisTenue, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>{dia}</p>
+                <p style={{ fontFamily: oswald, fontSize: 17, fontWeight: 600, color: hs === "Cerrado" ? C.grisTenue : C.blanco, margin: 0 }}>{hs}</p>
               </div>
             ))}
           </div>
 
+          {/* Contacto */}
           <div>
-            <p style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.12em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600, marginBottom: 18 }}>Contacto</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <span style={{ width: 20, height: 2, background: C.amarillo, display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Contacto</span>
+            </div>
             {[
               { icon: Phone, text: "+54 9 11 4162-6719", href: `https://wa.me/${WA}` },
-              { icon: MapPin, text: "Barrio Maldonado", href: "#" },
+              { icon: MapPin, text: "Elustondo 1242", href: "#" },
               { icon: AtSign, text: "@trinquetemaldonado", href: "https://instagram.com/trinquetemaldonado" },
             ].map(({ icon: Icon, text, href }) => (
-              <a key={text} href={href} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
-                <Icon size={15} color={C.amarillo} />
+              <a key={text} href={href} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
+                <span style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(255,211,0,0.1)", border: "1px solid rgba(255,211,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon size={15} color={C.amarillo} />
+                </span>
                 <span style={{ fontFamily: inter, fontSize: 14, color: C.gris }}>{text}</span>
               </a>
             ))}
           </div>
         </div>
 
-        <div style={{ paddingTop: 24, borderTop: `1px solid ${C.cardBorde}`, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 10 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, margin: 0 }}>© 2026 Trinquete Maldonado. Todos los derechos reservados.</p>
-            <a href="/panel" style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: inter, fontSize: 12, color: C.gris, textDecoration: "underline", width: "fit-content" }}>🔒 Panel de Dani</a>
-          </div>
-          <a href={`https://wa.me/${WA}?text=${encodeURIComponent("Hola! Quería consultar por el gimnasio.")}`} target="_blank" rel="noopener noreferrer"
-            style={{ fontFamily: oswald, fontSize: 13, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, color: C.negro, background: C.amarillo, padding: "9px 20px", borderRadius: 7 }}>
-            Escribinos por WhatsApp
+        <div style={{ paddingTop: 26, borderTop: `1px solid ${C.cardBorde}`, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 14 }}>
+          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, margin: 0 }}>© 2026 Trinquete Maldonado. Todos los derechos reservados.</p>
+          <a href="/panel" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 12, color: C.grisTenue, textDecoration: "none", letterSpacing: "0.02em" }}>
+            🔒 Panel de Dani
           </a>
         </div>
       </div>
     </footer>
+  )
+}
+
+/* ── Banda deslizante (marquee) ── */
+function TiraMarquee() {
+  const palabras = ["Pelota Paleta", "Musculación", "Spinning", "Reservá online", "Armá tu partido", "Comunidad del club"]
+  return (
+    <div style={{ background: C.amarillo, padding: "13px 0", overflow: "hidden" }}>
+      <Marquee duration={32} pauseOnHover fadeAmount={6}>
+        {palabras.map((p, i) => (
+          <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
+            <span style={{ fontFamily: oswald, fontSize: 15, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: C.negro, padding: "0 26px" }}>{p}</span>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: C.negro, display: "inline-block" }} />
+          </span>
+        ))}
+      </Marquee>
+    </div>
   )
 }
 
@@ -538,6 +577,7 @@ export default function TrinqueteLanding() {
         onSecondary={() => window.open(`https://wa.me/${WA}?text=${encodeURIComponent("Hola! Quiero anotarme al gimnasio. Me pueden pasar info?")}`, "_blank")}
         onTertiary={() => scrollTo("servicios")}
       />
+      <TiraMarquee />
       <ServiciosSection onAnotarse={irAnotarse} />
       <ArmadoSection />
       <GaleriaSection />

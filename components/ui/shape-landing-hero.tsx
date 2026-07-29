@@ -107,34 +107,13 @@ export function HeroGeometric({ onPrimary, onSecondary, onTertiary }: HeroProps)
             style={{
               fontFamily: "'Anton', sans-serif", fontWeight: 400, color: "#fff",
               fontSize: isMobile ? "clamp(56px, 16vw, 74px)" : "clamp(46px, 7vw, 84px)", lineHeight: 1.0,
-              textTransform: "uppercase", letterSpacing: "0.01em", marginBottom: 22,
+              textTransform: "uppercase", letterSpacing: "0.01em", marginBottom: 36,
               textShadow: "0 2px 14px rgba(0,0,0,0.45)",
             }}>
             Trinquete<br /><span style={{ color: YELLOW }}>Maldonado</span>
           </motion.h1>
 
-          <motion.p custom={1} variants={fadeUp} initial="hidden" animate="visible"
-            style={{
-              fontFamily: inter, fontSize: "clamp(13px, 1.6vw, 16px)",
-              color: "rgba(255,255,255,0.85)", letterSpacing: "0.04em",
-              lineHeight: 1.7, marginBottom: 18, maxWidth: 430,
-              marginLeft: isMobile ? "auto" : 0, marginRight: isMobile ? "auto" : 0,
-              textShadow: "0 2px 10px rgba(0,0,0,0.8)",
-            }}>
-            Gimnasio de buen ambiente para entrenar a tu ritmo. Equipamiento completo y profes que te acompañan en cada paso.
-          </motion.p>
-
-          <motion.p custom={1} variants={fadeUp} initial="hidden" animate="visible"
-            style={{
-              fontFamily: inter, fontSize: "clamp(13px, 1.5vw, 15px)",
-              color: YELLOW, letterSpacing: "0.06em", fontWeight: 600,
-              textTransform: "uppercase", marginBottom: 34,
-              textShadow: "0 2px 8px rgba(0,0,0,0.9)",
-            }}>
-            📍 Elustondo 1242
-          </motion.p>
-
-          <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible"
+          <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible"
             style={{ display: "flex", gap: 12, flexWrap: "wrap", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "center" }}>
             <button onClick={onPrimary} style={{
               fontFamily: oswald, fontSize: isMobile ? 14 : 15, letterSpacing: "0.06em", textTransform: "uppercase",
