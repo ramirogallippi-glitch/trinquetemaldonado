@@ -21,7 +21,7 @@ const C = {
 }
 const oswald = "'Oswald', sans-serif"
 const inter  = "'Inter', sans-serif"
-const WA     = "5491141626719"
+const WA     = "5491164533959"
 
 function useIsMobile() {
   const [m, setM] = useState(false)
@@ -381,7 +381,7 @@ export function PaletaSection() {
 
           {/* Teléfono */}
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu teléfono</label>
-          <input value={telefono} onChange={e => setTelefono(e.target.value)} type="tel" inputMode="tel" placeholder="Ej: 11 4162-6719"
+          <input value={telefono} onChange={e => setTelefono(e.target.value)} type="tel" inputMode="tel" placeholder="Ej: 11 6453-3959"
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26 }} />
 
           {/* Posición */}
@@ -524,7 +524,7 @@ function Footer() {
               <span style={{ fontFamily: oswald, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", color: C.amarillo, fontWeight: 600 }}>Contacto</span>
             </div>
             {[
-              { icon: Phone, text: "+54 9 11 4162-6719", href: `https://wa.me/${WA}` },
+              { icon: Phone, text: "+54 9 11 6453-3959", href: `https://wa.me/${WA}` },
               { icon: MapPin, text: "Elustondo 1242", href: "#" },
               { icon: AtSign, text: "@trinquetemaldonado", href: "https://instagram.com/trinquetemaldonado" },
             ].map(({ icon: Icon, text, href }) => (

@@ -25,8 +25,8 @@ const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx
 
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
-// Número de WhatsApp de Dani (cambiar por el real cuando lo tengan)
-const DANI_WA = "5491141626719"
+// Número de WhatsApp de Dani (+54 9 11 6453-3959)
+const DANI_WA = "5491164533959"
 // Contraseña para entrar al muro (cambiala por la que quieras que use el club)
 const CLAVE = "trinquete2026"
 // Contraseña de ADMIN (SOLO Dani) para borrar partidos. Cambiala por la que quieras.
