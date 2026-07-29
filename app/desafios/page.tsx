@@ -20,6 +20,8 @@ const inter  = "'Inter', sans-serif"
 
 /* ⚠️ Pegar acá la URL del Apps Script de la planilla "Desafíos" (la que vas a crear) */
 const DESAFIOS_URL = "https://script.google.com/macros/s/AKfycbz_-Q9pCsMEtCJZ8UNgRzfi_PlOSD8UHC8hqvUW70FA3-nRlnGjpiVRI7-gExnHT7DHVA/exec"
+// Agenda de la cancha (turnos ocupados)
+const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx3gnqeM00tKwYye3D2sk3_ipEAgoabR3JyJ0rIQXZ6QmDIB44d/exec"
 
 const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
@@ -66,6 +68,7 @@ function formatFecha(v: string): string {
 export default function DesafiosPage() {
   const isMobile = useIsMobile()
   const [desafios, setDesafios] = useState<Desafio[]>([])
+  const [reservados, setReservados] = useState<Set<string>>(new Set())
   const [cargando, setCargando] = useState(true)
   const [showForm, setShowForm] = useState(false)
 
@@ -148,7 +151,23 @@ export default function DesafiosPage() {
       .finally(() => setCargando(false))
   }
 
-  useEffect(() => { cargarDesafios() }, [])
+  const cargarReservas = () => {
+    fetch(RESERVAS_URL)
+      .then(r => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setReservados(new Set(data.map((r: any) => `${formatFecha(r.fecha)}|${String(r.turno).trim()}`)))
+      })
+      .catch(() => {})
+  }
+
+  useEffect(() => {
+    cargarDesafios(); cargarReservas()
+    // refresco automático cada 20s (desafíos y reservas al día entre dispositivos)
+    const iv = setInterval(() => { cargarDesafios(); cargarReservas() }, 20000)
+    const onFocus = () => { cargarDesafios(); cargarReservas() }
+    window.addEventListener("focus", onFocus)
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus) }
+  }, [])
 
   const hoyStr = (() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()
 
@@ -157,9 +176,13 @@ export default function DesafiosPage() {
       setError("Completá los dos jugadores con sus teléfonos, categoría, fecha y turno.")
       return
     }
+    const fechaFmt = fecha.split("-").reverse().join("/")
+    if (reservados.has(`${fechaFmt}|${String(turno).trim()}`)) {
+      setError("Este turno ya fue reservado. Por favor, elegí otro horario.")
+      return
+    }
     setError("")
     setEnviando(true)
-    const fechaFmt = fecha.split("-").reverse().join("/")
     const id = String(Date.now())
     const payload: Desafio = { id, jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2, estado: "abierto", rival1: "", rival2: "" }
     try {
@@ -183,6 +206,16 @@ export default function DesafiosPage() {
       setErrorAceptar("Completá los nombres de los dos jugadores de tu dupla.")
       return
     }
+    // ¿alguien ya lo aceptó? (según lo último cargado)
+    const actual = desafios.find(x => x.id === d.id)
+    if (actual && actual.estado === "completo") {
+      setErrorAceptar("Otra dupla ya aceptó este desafío. Elegí otro.")
+      return
+    }
+    if (reservados.has(`${formatFecha(d.fecha)}|${String(d.turno).trim()}`)) {
+      setErrorAceptar("Este turno ya fue reservado. Por favor, elegí otro horario.")
+      return
+    }
     setErrorAceptar("")
     // 1) Abrir WhatsApp PRIMERO (en el toque directo, clave para que funcione en iPhone)
     const msg =
@@ -198,10 +231,18 @@ export default function DesafiosPage() {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2 }),
     }).catch(() => {})
-    // 3) optimista: marco el partido como completo
+    // 3) reservar el turno en la agenda de la cancha
+    const claveReserva = `${formatFecha(d.fecha)}|${String(d.turno).trim()}`
+    fetch(RESERVAS_URL, {
+      method: "POST", mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "reservar", fecha: formatFecha(d.fecha), turno: d.turno }),
+    }).catch(() => {})
+    setReservados(prev => new Set(prev).add(claveReserva))
+    // 4) optimista: marco el partido como completo
     setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
     setAceptandoId(null); setRival1(""); setRival2("")
-    setTimeout(cargarDesafios, 2000)
+    setTimeout(() => { cargarDesafios(); cargarReservas() }, 2000)
   }
 
   const inputStyle: React.CSSProperties = {

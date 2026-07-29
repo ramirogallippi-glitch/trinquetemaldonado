@@ -257,6 +257,8 @@ const CATEGORIAS = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const TURNOS = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
 // Planilla de Google (Apps Script) donde se guardan los anotados
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
+// Agenda de la cancha (turnos ocupados)
+const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx3gnqeM00tKwYye3D2sk3_ipEAgoabR3JyJ0rIQXZ6QmDIB44d/exec"
 
 export function PaletaSection() {
   const isMobile = useIsMobile()
@@ -269,6 +271,23 @@ export function PaletaSection() {
   const [error, setError] = useState("")
   const [enviando, setEnviando] = useState(false)
   const [sent, setSent] = useState(false)
+  const [reservados, setReservados] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const cargarReservas = () => {
+      fetch(RESERVAS_URL)
+        .then(r => r.json())
+        .then((data) => {
+          if (Array.isArray(data)) setReservados(new Set(data.map((r: any) => `${String(r.fecha).trim()}|${String(r.turno).trim()}`)))
+        })
+        .catch(() => {})
+    }
+    cargarReservas()
+    const iv = setInterval(cargarReservas, 20000)
+    const onFocus = () => cargarReservas()
+    window.addEventListener("focus", onFocus)
+    return () => { clearInterval(iv); window.removeEventListener("focus", onFocus) }
+  }, [])
 
   const toggle = (arr: string[], set: (v: string[]) => void, val: string) =>
     set(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
@@ -278,8 +297,13 @@ export function PaletaSection() {
       setError("Completá tu nombre, teléfono, posición, categoría, la fecha y al menos un turno.")
       return
     }
+    const fechaFmt = fecha.split("-").reverse().join("/")
+    const turnosReservados = turnos.filter(t => reservados.has(`${fechaFmt}|${String(t).trim()}`))
+    if (turnosReservados.length > 0) {
+      setError(`El turno ${turnosReservados.join(", ")} del ${fechaFmt} ya está reservado. Por favor, elegí otro horario.`)
+      return
+    }
     setError("")
-    setEnviando(true)
     const payload = {
       nombre,
       telefono,
@@ -288,17 +312,14 @@ export function PaletaSection() {
       turnos: turnos.join(", "),
       fechaJugar: fecha ? fecha.split("-").reverse().join("/") : "",
     }
-    try {
-      await fetch(SHEET_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
-      })
-    } catch (e) {
-      // si fallara, el respaldo de WhatsApp queda disponible abajo
-    }
-    setEnviando(false)
+    // Disparamos el guardado sin esperar (no-cors no devuelve respuesta útil).
+    // Apps Script igual ejecuta el guardado; así la confirmación es instantánea.
+    fetch(SHEET_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    }).catch(() => {})
     setSent(true)
   }
 
@@ -335,8 +356,11 @@ export function PaletaSection() {
                 <CheckCircle2 size={34} color={C.amarillo} />
               </div>
               <h3 style={{ fontFamily: oswald, fontSize: 26, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 12 }}>¡Quedaste anotado!</h3>
-              <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 420, margin: "0 auto 26px" }}>
-                Tu disponibilidad se registró correctamente. Dani te va a contactar para coordinar el partido.
+              <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 420, margin: "0 auto 16px" }}>
+                Tu disponibilidad se registró. Dani te va a contactar para coordinar el partido.
+              </p>
+              <p style={{ fontFamily: inter, fontSize: 12.5, color: C.grisTenue, lineHeight: 1.6, maxWidth: 400, margin: "0 auto 26px" }}>
+                Si en un rato no te contactan, volvé a anotarte por las dudas.
               </p>
               <button onClick={resetForm} style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 28px", borderRadius: 8 }}>Anotar otro jugador</button>
             </div>
