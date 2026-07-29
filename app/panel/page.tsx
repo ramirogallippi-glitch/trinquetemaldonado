@@ -23,8 +23,8 @@ const inter  = "'Inter', sans-serif"
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbyj8eaiibJGXDL2PrnRtpFXpXf8iaoFvJVSyT2SWRIqamETclFhMTNu-0OkXqW8I3qbOg/exec"
 // Agenda de la cancha (turnos ocupados)
 const RESERVAS_URL = "https://script.google.com/macros/s/AKfycbwQ4-dYzUabsSYN5Xx3gnqeM00tKwYye3D2sk3_ipEAgoabR3JyJ0rIQXZ6QmDIB44d/exec"
-// Clave para que solo entre Dani / el club
-const CLAVE = "trinquete2026"
+// Clave del PANEL: solo Dani (distinta de la del club, que es la del muro de desafíos)
+const CLAVE = "dani2026"
 
 const ORDEN_CAT = ["Primera", "Segunda", "Tercera", "Cuarta"]
 const ORDEN_TURNO = ["17:30 - 19:00", "19:00 - 20:30", "20:30 - 22:00"]
@@ -107,11 +107,11 @@ export default function PanelPage() {
   const [claveInput, setClaveInput] = useState("")
   const [claveError, setClaveError] = useState(false)
   useEffect(() => {
-    if (typeof window !== "undefined" && localStorage.getItem("trinquete_panel_ok") === "1") setUnlocked(true)
+    if (typeof window !== "undefined" && localStorage.getItem("trinquete_panel_dani") === "1") setUnlocked(true)
   }, [])
   const entrar = () => {
     if (claveInput.trim().toLowerCase() === CLAVE.toLowerCase()) {
-      localStorage.setItem("trinquete_panel_ok", "1"); setUnlocked(true); setClaveError(false)
+      localStorage.setItem("trinquete_panel_dani", "1"); setUnlocked(true); setClaveError(false)
     } else setClaveError(true)
   }
 
@@ -360,7 +360,7 @@ export default function PanelPage() {
       <main style={{ background: C.negro, minHeight: "100vh", color: C.blanco, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
         <ShieldCheck size={40} color={C.amarillo} style={{ marginBottom: 18 }} />
         <h1 style={{ fontFamily: anton, fontSize: "clamp(26px, 8vw, 42px)", textTransform: "uppercase", marginBottom: 10, textAlign: "center" }}>Panel de Dani</h1>
-        <p style={{ fontFamily: inter, fontSize: 14, color: C.gris, marginBottom: 26, textAlign: "center", maxWidth: 320 }}>Ingresá la clave del club para ver los anotados.</p>
+        <p style={{ fontFamily: inter, fontSize: 14, color: C.gris, marginBottom: 26, textAlign: "center", maxWidth: 320 }}>Panel privado. Ingresá tu clave de administrador (Dani).</p>
         <input type="password" value={claveInput}
           onChange={e => { setClaveInput(e.target.value); setClaveError(false) }}
           onKeyDown={e => { if (e.key === "Enter") entrar() }}
