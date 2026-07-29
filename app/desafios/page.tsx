@@ -44,6 +44,8 @@ interface Desafio {
   estado: string   // "abierto" | "completo"
   rival1: string
   rival2: string
+  rivalTel1?: string
+  rivalTel2?: string
 }
 
 function useIsMobile() {
@@ -136,6 +138,8 @@ export default function DesafiosPage() {
   const [aceptandoId, setAceptandoId] = useState<string | null>(null)
   const [rival1, setRival1] = useState("")
   const [rival2, setRival2] = useState("")
+  const [rivalTel1, setRivalTel1] = useState("")
+  const [rivalTel2, setRivalTel2] = useState("")
   const [errorAceptar, setErrorAceptar] = useState("")
 
   const cargarDesafios = () => {
@@ -202,8 +206,8 @@ export default function DesafiosPage() {
   }
 
   const confirmarAceptar = (d: Desafio) => {
-    if (!rival1.trim() || !rival2.trim()) {
-      setErrorAceptar("Completá los nombres de los dos jugadores de tu dupla.")
+    if (!rival1.trim() || !rival2.trim() || !rivalTel1.trim() || !rivalTel2.trim()) {
+      setErrorAceptar("Completá el nombre y el teléfono de los dos jugadores de tu dupla.")
       return
     }
     // ¿alguien ya lo aceptó? (según lo último cargado)
@@ -223,13 +227,18 @@ export default function DesafiosPage() {
       `${d.jugador1} y ${d.jugador2} VS ${rival1} y ${rival2}\n` +
       `Categoría: ${d.categoria}\n` +
       `Fecha: ${formatFecha(d.fecha)}\n` +
-      `Horario: ${d.turno}`
+      `Horario: ${d.turno}\n\n` +
+      `Teléfonos:\n` +
+      `${d.jugador1}: ${d.telefono1}\n` +
+      `${d.jugador2}: ${d.telefono2}\n` +
+      `${rival1}: ${rivalTel1}\n` +
+      `${rival2}: ${rivalTel2}`
     window.open(`https://wa.me/${DANI_WA}?text=${encodeURIComponent(msg)}`, "_blank")
     // 2) Guardar en la planilla (sin esperar, así no bloquea la apertura de WhatsApp)
     fetch(DESAFIOS_URL, {
       method: "POST", mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2 }),
+      body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2, rivalTel1, rivalTel2 }),
     }).catch(() => {})
     // 3) reservar el turno en la agenda de la cancha
     const claveReserva = `${formatFecha(d.fecha)}|${String(d.turno).trim()}`
@@ -240,8 +249,8 @@ export default function DesafiosPage() {
     }).catch(() => {})
     setReservados(prev => new Set(prev).add(claveReserva))
     // 4) optimista: marco el partido como completo
-    setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2 } : x))
-    setAceptandoId(null); setRival1(""); setRival2("")
+    setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2, rivalTel1, rivalTel2 } : x))
+    setAceptandoId(null); setRival1(""); setRival2(""); setRivalTel1(""); setRivalTel2("")
     setTimeout(() => { cargarDesafios(); cargarReservas() }, 2000)
   }
 
@@ -449,8 +458,10 @@ export default function DesafiosPage() {
                   {!completo && aceptandoId === d.id && (
                     <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.cardBorde}` }}>
                       <p style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu dupla (los rivales)</p>
-                      <input value={rival1} onChange={e => setRival1(e.target.value)} placeholder="Jugador 1" style={inputStyle} />
-                      <input value={rival2} onChange={e => setRival2(e.target.value)} placeholder="Jugador 2" style={{ ...inputStyle, marginBottom: 14 }} />
+                      <input value={rival1} onChange={e => setRival1(e.target.value)} placeholder="Jugador 1 (nombre)" style={inputStyle} />
+                      <input value={rivalTel1} onChange={e => setRivalTel1(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${rival1 || "Jugador 1"}`} style={inputStyle} />
+                      <input value={rival2} onChange={e => setRival2(e.target.value)} placeholder="Jugador 2 (nombre)" style={inputStyle} />
+                      <input value={rivalTel2} onChange={e => setRivalTel2(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${rival2 || "Jugador 2"}`} style={{ ...inputStyle, marginBottom: 14 }} />
                       {errorAceptar && <p style={{ fontFamily: inter, fontSize: 12.5, color: "#ff6b6b", marginBottom: 12 }}>{errorAceptar}</p>}
                       <div style={{ display: "flex", gap: 10 }}>
                         <button onClick={() => confirmarAceptar(d)} style={{ flex: 1, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "13px", borderRadius: 8 }}>
