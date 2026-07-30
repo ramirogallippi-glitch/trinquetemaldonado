@@ -231,7 +231,7 @@ export default function PanelPage() {
   // Mensaje personalizado para avisarle a UN jugador (con la formación y marcándolo a él)
   const mensajePara = (j: Jugador) => {
     const b = seleccionados[0]
-    return `🎾 ¡Se armó tu partido de pelota paleta!\n\n📅 ${fechaCompleta(b.fechaJugar)}\n🕐 ${b.turno}\n\n${lineupTexto(j.key)}\n📍 Cancha del Trinquete. ¡Te esperamos!`
+    return `🎾 ¡Se armó tu partido de pelota paleta!\n\n📅 ${fechaCompleta(b.fechaJugar)}\n🕐 ${b.turno}\n\n${lineupTexto(j.key)}\n📍 Cancha del Trinquete Maldonado. ¡Te esperamos!`
   }
   const copiar = () => {
     if (!mensajeArmado) return
