@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Users, Calendar, Clock, RefreshCw, Copy, Send, Check, ShieldCheck } from "lucide-react"
+import { guardarConfirmado, leerFilas, telefonoWa } from "@/lib/sheets"
 
 /* ── Paleta ── */
 const C = {
@@ -100,6 +101,7 @@ export default function PanelPage() {
   const [seleccion, setSeleccion] = useState<Record<string, Jugador>>({})
   const [copiado, setCopiado] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
+  const [procesando, setProcesando] = useState(false)
   const [reservados, setReservados] = useState<Set<string>>(new Set())
 
   // Acceso con contraseña
@@ -233,24 +235,41 @@ export default function PanelPage() {
     setConfirmando(true)
   }
   // Recién acá se borran (cuando Dani confirma que efectivamente lo mandó)
-  const confirmarEnviado = () => {
+  const confirmarEnviado = async () => {
     const armados = seleccionados
-    quitarDeLaPlanilla(armados)
-    // Reservar el turno de la cancha (día + horario del partido armado)
     const base = armados[0]
-    if (base) {
-      const fResv = fechaDMY(base.fechaJugar)
-      fetch(RESERVAS_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "reservar", fecha: fResv, turno: base.turno }),
-      }).catch(() => {})
-      setReservados(prev => new Set(prev).add(`${fResv}|${String(base.turno).trim()}`))
+    if (!base) { setConfirmando(false); return }
+    setProcesando(true)
+    const fResv = fechaDMY(base.fechaJugar)
+    const clave = `${fResv}|${String(base.turno).trim()}`
+    // Anti doble-reserva: ¿el turno ya está tomado (por un desafío u otro armado)?
+    const reservasAhora = await leerFilas(RESERVAS_URL)
+    const tomado = reservasAhora.some((r: any) => `${fechaDMY(r.fecha)}|${String(r.turno).trim()}` === clave)
+    if (tomado) {
+      setReservados(new Set(reservasAhora.map((r: any) => `${fechaDMY(r.fecha)}|${String(r.turno).trim()}`)))
+      setProcesando(false); setConfirmando(false)
+      alert("Ojo: ese turno ya figura reservado (quizás por un desafío). No armé el partido para no pisar la cancha; revisá la Agenda de turnos.")
+      return
     }
+    // Reservar el turno de la cancha (guardado CONFIRMADO)
+    const res = await guardarConfirmado(
+      RESERVAS_URL,
+      { action: "reservar", fecha: fResv, turno: base.turno },
+      (filas) => filas.some((r: any) => `${fechaDMY(r.fecha)}|${String(r.turno).trim()}` === clave),
+    )
+    if (res !== "ok") {
+      setProcesando(false)
+      alert("No pudimos confirmar la reserva del turno (puede ser la conexión). Reintentá en unos segundos.")
+      return
+    }
+    setReservados(prev => new Set(prev).add(clave))
+    // Sacar a los jugadores de la lista de anotados
+    quitarDeLaPlanilla(armados)
     const fuera: Record<string, boolean> = {}
     armados.forEach(j => { fuera[`${j.nombre}__${j.telefono}`] = true })
     setAnotados(prev => prev.filter(a => !fuera[`${a.nombre}__${a.telefono}`]))
     setSeleccion({})
+    setProcesando(false)
     setConfirmando(false)
   }
 
@@ -306,7 +325,7 @@ export default function PanelPage() {
                     <span style={{ fontFamily: inter, fontSize: 14, fontWeight: 500, color: C.blanco, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.nombre}</span>
                     <span style={{ flexShrink: 0, fontFamily: inter, fontSize: 10, fontWeight: 700, color: C.amarillo, border: `1px solid ${C.amarillo}55`, borderRadius: 999, padding: "2px 7px", textTransform: "uppercase" }}>{j.categoria}</span>
                   </span>
-                  <a href={`https://wa.me/${String(j.telefono).replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                  <a href={`https://wa.me/${telefonoWa(j.telefono)}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                     style={{ flexShrink: 0, fontFamily: inter, fontSize: 12, color: C.gris, textDecoration: "underline", whiteSpace: "nowrap" }}>{j.telefono}</a>
                 </div>
               )
@@ -482,11 +501,11 @@ export default function PanelPage() {
                   ¿Enviaste el mensaje por WhatsApp? Al confirmar, estos jugadores se quitan de la lista.
                 </span>
                 <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
-                  <button onClick={() => setConfirmando(false)} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8 }}>
+                  <button onClick={() => setConfirmando(false)} disabled={procesando} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: procesando ? "default" : "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8, opacity: procesando ? 0.6 : 1 }}>
                     No, volver
                   </button>
-                  <button onClick={confirmarEnviado} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.verde, border: "none", padding: "11px 18px", borderRadius: 8 }}>
-                    <Check size={15} /> Sí, lo mandé
+                  <button onClick={confirmarEnviado} disabled={procesando} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: procesando ? "default" : "pointer", color: C.negro, background: C.verde, border: "none", padding: "11px 18px", borderRadius: 8, opacity: procesando ? 0.7 : 1 }}>
+                    <Check size={15} /> {procesando ? "Confirmando…" : "Sí, lo mandé"}
                   </button>
                 </div>
               </div>

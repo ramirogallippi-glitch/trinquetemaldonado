@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Swords, Calendar, Clock, Trophy, Plus, X, Send, Trash2, Check } from "lucide-react"
+import { guardarConfirmado, leerFilas, fechaVencida } from "@/lib/sheets"
 
 /* ── Paleta ── */
 const C = {
@@ -156,6 +157,7 @@ export default function DesafiosPage() {
   const [errorAceptar, setErrorAceptar] = useState("")
   // paso 2 del aceptar: WhatsApp ya abierto, esperando que el usuario confirme que lo mandó
   const [confirmandoAceptarId, setConfirmandoAceptarId] = useState<string | null>(null)
+  const [procesandoAceptar, setProcesandoAceptar] = useState(false)
 
   const cargarDesafios = () => {
     fetch(DESAFIOS_URL)
@@ -190,33 +192,43 @@ export default function DesafiosPage() {
 
   const hoyStr = (() => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}` })()
 
+  // Muro: ocultamos los desafíos con fecha ya pasada (basura vieja que confunde al jugador)
+  const desafiosVisibles = desafios.filter(d => !fechaVencida(formatFecha(d.fecha)))
+
   const publicar = async () => {
     if (!j1.trim() || !j2.trim() || !categoria || !fecha || !turno || !telefono1.trim() || !telefono2.trim()) {
       setError("Completá los dos jugadores con sus teléfonos, categoría, fecha y turno.")
       return
     }
     const fechaFmt = fecha.split("-").reverse().join("/")
-    if (reservados.has(`${fechaFmt}|${String(turno).trim()}`)) {
+    setError("")
+    setEnviando(true)
+    // Anti doble-reserva: re-chequeo el turno AHORA (no con datos viejos)
+    const reservasAhora = await leerFilas(RESERVAS_URL)
+    const ocupados = new Set(reservasAhora.map((r: any) => `${formatFecha(r.fecha)}|${String(r.turno).trim()}`))
+    if (ocupados.has(`${fechaFmt}|${String(turno).trim()}`)) {
+      setReservados(ocupados)
+      setEnviando(false)
       setError("Este turno ya fue reservado. Por favor, elegí otro horario.")
       return
     }
-    setError("")
-    setEnviando(true)
     const id = String(Date.now())
     const payload: Desafio = { id, jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2, estado: "abierto", rival1: "", rival2: "" }
-    try {
-      await fetch(DESAFIOS_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ ...payload, action: "publicar" }),
-      })
-    } catch (e) {}
-    // optimista: lo agrego al muro al toque
-    setDesafios(prev => [payload, ...prev])
+    // Guardado CONFIRMADO: manda y verifica que el desafío quedó en la planilla.
+    const res = await guardarConfirmado(
+      DESAFIOS_URL,
+      { ...payload, action: "publicar" },
+      (filas) => filas.some((f: any) => String(f.id) === id),
+    )
     setEnviando(false)
+    if (res !== "ok") {
+      setError("No pudimos confirmar la publicación (puede ser la conexión). Reintentá en unos segundos.")
+      return
+    }
+    // confirmado: lo agrego al muro
+    setDesafios(prev => [payload, ...prev])
     setShowForm(false)
     setJ1(""); setJ2(""); setCategoria(""); setFecha(""); setTurno(""); setTelefono1(""); setTelefono2("")
-    // y re-sincronizo con la planilla
     setTimeout(cargarDesafios, 2000)
   }
 
@@ -260,25 +272,47 @@ export default function DesafiosPage() {
   }
 
   // PASO 2: el usuario confirma que efectivamente mandó el mensaje. RECIÉN ACÁ se arma el partido.
-  const confirmarEnviadoAceptar = (d: Desafio) => {
-    if (!puedeAceptar(d)) { setConfirmandoAceptarId(null); return }
+  const confirmarEnviadoAceptar = async (d: Desafio) => {
     setErrorAceptar("")
-    // Guardar en la planilla (marca el desafío como completo)
-    fetch(DESAFIOS_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "aceptar", id: d.id, rival1, rival2, rivalTel1, rivalTel2 }),
-    }).catch(() => {})
-    // Reservar el turno en la agenda de la cancha
+    setProcesandoAceptar(true)
     const claveReserva = `${formatFecha(d.fecha)}|${String(d.turno).trim()}`
-    fetch(RESERVAS_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "reservar", fecha: formatFecha(d.fecha), turno: d.turno }),
-    }).catch(() => {})
+    // Re-chequeo FRESCO justo antes de confirmar: ¿alguien tomó el desafío o el turno mientras tanto?
+    const [desafiosAhora, reservasAhora] = await Promise.all([leerFilas(DESAFIOS_URL), leerFilas(RESERVAS_URL)])
+    const yaCompleto = desafiosAhora.some((x: any) => String(x.id) === String(d.id) && String(x.estado) === "completo")
+    const turnoTomado = reservasAhora.some((r: any) => `${formatFecha(r.fecha)}|${String(r.turno).trim()}` === claveReserva)
+    if (yaCompleto) {
+      setProcesandoAceptar(false)
+      setErrorAceptar("Otra dupla ya aceptó este desafío mientras completabas. Elegí otro.")
+      cargarDesafios(); cargarReservas()
+      return
+    }
+    if (turnoTomado) {
+      setProcesandoAceptar(false)
+      setErrorAceptar("Ese turno se acaba de reservar. Elegí otro horario.")
+      cargarReservas()
+      return
+    }
+    // Guardado CONFIRMADO: marcar el desafío como completo y verificar que quedó.
+    const res = await guardarConfirmado(
+      DESAFIOS_URL,
+      { action: "aceptar", id: d.id, rival1, rival2, rivalTel1, rivalTel2 },
+      (filas) => filas.some((x: any) => String(x.id) === String(d.id) && String(x.estado) === "completo"),
+    )
+    if (res !== "ok") {
+      setProcesandoAceptar(false)
+      setErrorAceptar("No pudimos confirmar el partido (puede ser la conexión). Reintentá en unos segundos.")
+      return
+    }
+    // Reservar el turno (confirmado). Si la reserva no se confirmara, el partido igual
+    // quedó armado y Dani puede reservarlo desde la Agenda del panel.
+    await guardarConfirmado(
+      RESERVAS_URL,
+      { action: "reservar", fecha: formatFecha(d.fecha), turno: d.turno },
+      (filas) => filas.some((r: any) => `${formatFecha(r.fecha)}|${String(r.turno).trim()}` === claveReserva),
+    )
     setReservados(prev => new Set(prev).add(claveReserva))
-    // Optimista: marco el partido como completo
     setDesafios(prev => prev.map(x => x.id === d.id ? { ...x, estado: "completo", rival1, rival2, rivalTel1, rivalTel2 } : x))
+    setProcesandoAceptar(false)
     setAceptandoId(null); setConfirmandoAceptarId(null)
     setRival1(""); setRival2(""); setRivalTel1(""); setRivalTel2("")
     setTimeout(() => { cargarDesafios(); cargarReservas() }, 2000)
@@ -417,14 +451,14 @@ export default function DesafiosPage() {
 
         {cargando ? (
           <p style={{ fontFamily: inter, color: C.gris, textAlign: "center", padding: "30px 0" }}>Cargando…</p>
-        ) : desafios.length === 0 ? (
+        ) : desafiosVisibles.length === 0 ? (
           <div style={{ background: C.card, border: `1px solid ${C.cardBorde}`, borderRadius: 14, padding: "40px 20px", textAlign: "center" }}>
             <Swords size={32} color={C.grisTenue} style={{ marginBottom: 14 }} />
             <p style={{ fontFamily: inter, fontSize: 15, color: C.gris }}>Todavía no hay desafíos. ¡Sé el primero en publicar uno!</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {desafios.map((d) => {
+            {desafiosVisibles.map((d) => {
               const completo = d.estado === "completo"
               return (
                 <div key={d.id} style={{ background: C.card, border: `1px solid ${completo ? "#6B8F71" : C.cardBorde}`, borderRadius: 14, padding: isMobile ? 18 : 22 }}>
@@ -518,10 +552,10 @@ export default function DesafiosPage() {
                       </p>
                       {errorAceptar && <p style={{ fontFamily: inter, fontSize: 12.5, color: "#ff6b6b", marginBottom: 12 }}>{errorAceptar}</p>}
                       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        <button onClick={() => confirmarEnviadoAceptar(d)} style={{ flex: 1, minWidth: 160, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: "#6B8F71", border: "none", padding: "13px", borderRadius: 8 }}>
-                          <Check size={15} /> Sí, ya lo mandé
+                        <button onClick={() => confirmarEnviadoAceptar(d)} disabled={procesandoAceptar} style={{ flex: 1, minWidth: 160, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: oswald, fontSize: 14, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: 700, cursor: procesandoAceptar ? "default" : "pointer", color: C.negro, background: "#6B8F71", border: "none", padding: "13px", borderRadius: 8, opacity: procesandoAceptar ? 0.7 : 1 }}>
+                          <Check size={15} /> {procesandoAceptar ? "Confirmando…" : "Sí, ya lo mandé"}
                         </button>
-                        <button onClick={() => setConfirmandoAceptarId(null)} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "13px 18px", borderRadius: 8 }}>
+                        <button onClick={() => setConfirmandoAceptarId(null)} disabled={procesandoAceptar} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: procesandoAceptar ? "default" : "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "13px 18px", borderRadius: 8, opacity: procesandoAceptar ? 0.6 : 1 }}>
                           Todavía no
                         </button>
                       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { HeroGeometric } from "./shape-landing-hero"
 import { Marquee } from "./marquee"
+import { guardarConfirmado, leerFilas } from "@/lib/sheets"
 import {
   Dumbbell, Bike, Target, MapPin, Phone, AtSign,
   CheckCircle2, ChevronRight, Send, Droplets, Swords, UserPlus,
@@ -306,29 +307,44 @@ export function PaletaSection() {
       return
     }
     const fechaFmt = fecha.split("-").reverse().join("/")
-    const turnosReservados = turnos.filter(t => reservados.has(`${fechaFmt}|${String(t).trim()}`))
+    setError("")
+    setEnviando(true)
+
+    // Anti doble-reserva: re-chequeo los turnos ocupados AHORA (no con datos viejos)
+    const reservasAhora = await leerFilas(RESERVAS_URL)
+    const ocupadosAhora = new Set(reservasAhora.map((r: any) => `${String(r.fecha).trim()}|${String(r.turno).trim()}`))
+    const turnosReservados = turnos.filter(t => ocupadosAhora.has(`${fechaFmt}|${String(t).trim()}`))
     if (turnosReservados.length > 0) {
+      setReservados(ocupadosAhora)
+      setEnviando(false)
       setError(`El turno ${turnosReservados.join(", ")} del ${fechaFmt} ya está reservado. Por favor, elegí otro horario.`)
       return
     }
-    setError("")
+
     const payload = {
       nombre,
       telefono,
       posicion,
       categoria,
       turnos: turnos.join(", "),
-      fechaJugar: fecha ? fecha.split("-").reverse().join("/") : "",
+      fechaJugar: fechaFmt,
     }
-    // Disparamos el guardado sin esperar (no-cors no devuelve respuesta útil).
-    // Apps Script igual ejecuta el guardado; así la confirmación es instantánea.
-    fetch(SHEET_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    }).catch(() => {})
-    setSent(true)
+    // Guardado CONFIRMADO: manda y después relee la planilla para verificar que quedó.
+    // Verificamos por nombre + fecha (robusto: no dependemos de cómo Google guarde el teléfono).
+    const res = await guardarConfirmado(
+      SHEET_URL,
+      payload,
+      (filas) => filas.some((f: any) =>
+        String(f.nombre || "").trim().toLowerCase() === nombre.trim().toLowerCase() &&
+        String(f.fechaJugar || "").trim() === fechaFmt
+      ),
+    )
+    setEnviando(false)
+    if (res === "ok") {
+      setSent(true)
+    } else {
+      setError("No pudimos confirmar tu anotación (puede ser la conexión). Reintentá en unos segundos; si sigue, usá el botón \"Anotate por WhatsApp\" de abajo.")
+    }
   }
 
   const resetForm = () => {
