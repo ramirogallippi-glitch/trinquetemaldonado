@@ -211,18 +211,27 @@ export default function PanelPage() {
   }
 
   const seleccionados = Object.values(seleccion)
+  // Formación agrupada por posición. Si se pasa miKey, marca a ese jugador con "(vos)".
+  const lineupTexto = (miKey?: string) => {
+    const nom = (p: Jugador) => p.key === miKey ? `${p.nombre} (vos)` : p.nombre
+    const del = seleccionados.filter(p => /delantero/i.test(p.posicion)).map(nom)
+    const zag = seleccionados.filter(p => /zaguero/i.test(p.posicion)).map(nom)
+    const otros = seleccionados.filter(p => !/delantero|zaguero/i.test(p.posicion)).map(nom)
+    let t = ""
+    if (del.length) t += `⚡ Delanteros: ${del.join(", ")}\n`
+    if (zag.length) t += `🛡️ Zagueros: ${zag.join(", ")}\n`
+    if (otros.length) t += `👤 Sin posición: ${otros.join(", ")}\n`
+    return t
+  }
   const mensajeArmado = (() => {
     if (!seleccionados.length) return ""
     const b = seleccionados[0]
-    const lineas = seleccionados.map(p => `• ${p.nombre} (${p.posicion})`).join("\n")
-    return `🎾 ¡Partido armado!\n\n${fechaCompleta(b.fechaJugar)}\nHorario: ${b.turno}\nCategoría: ${b.categoria}\n\nJugadores:\n${lineas}`
+    return `🎾 ¡Partido armado!\n\n📅 ${fechaCompleta(b.fechaJugar)}\n🕐 ${b.turno}\n🏷️ ${b.categoria}\n\n${lineupTexto()}`
   })()
-  // Mensaje personalizado para avisarle a UN jugador (le dice con quién juega, sin repetirlo a él)
+  // Mensaje personalizado para avisarle a UN jugador (con la formación y marcándolo a él)
   const mensajePara = (j: Jugador) => {
     const b = seleccionados[0]
-    const otros = seleccionados.filter(p => p.key !== j.key).map(p => p.nombre)
-    const conQuien = otros.length ? `👥 Jugás con: ${otros.join(", ")}\n` : ""
-    return `🎾 ¡Se armó tu partido de pelota paleta!\n\n📅 ${fechaCompleta(b.fechaJugar)}\n🕐 ${b.turno}\n${conQuien}📍 Cancha del Trinquete. ¡Te esperamos!`
+    return `🎾 ¡Se armó tu partido de pelota paleta!\n\n📅 ${fechaCompleta(b.fechaJugar)}\n🕐 ${b.turno}\n\n${lineupTexto(j.key)}\n📍 Cancha del Trinquete. ¡Te esperamos!`
   }
   const copiar = () => {
     if (!mensajeArmado) return
