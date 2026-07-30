@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { HeroGeometric } from "./shape-landing-hero"
 import { Marquee } from "./marquee"
-import { guardarConfirmado, leerFilas, turnoYaPaso } from "@/lib/sheets"
+import { guardarConfirmado, leerFilas, turnoYaPaso, limpiarTel } from "@/lib/sheets"
 import {
   Dumbbell, Bike, Target, MapPin, Phone, AtSign,
   CheckCircle2, ChevronRight, Send, Droplets, Swords, UserPlus,
@@ -332,7 +332,7 @@ export function PaletaSection() {
 
     const payload = {
       nombre,
-      telefono,
+      telefono: limpiarTel(telefono),
       posicion,
       categoria,
       turnos: turnos.join(", "),

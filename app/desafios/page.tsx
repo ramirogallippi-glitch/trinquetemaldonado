@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Swords, Calendar, Clock, Trophy, Plus, X, Send, Trash2, Check } from "lucide-react"
-import { guardarConfirmado, leerFilas, fechaVencida, turnoYaPaso, enviarPost } from "@/lib/sheets"
+import { guardarConfirmado, leerFilas, fechaVencida, turnoYaPaso, enviarPost, limpiarTel } from "@/lib/sheets"
 
 /* ── Paleta ── */
 const C = {
@@ -209,7 +209,7 @@ export default function DesafiosPage() {
       return
     }
     const id = String(Date.now())
-    const payload: Desafio = { id, jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1, telefono2, estado: "abierto", rival1: "", rival2: "" }
+    const payload: Desafio = { id, jugador1: j1, jugador2: j2, categoria, fecha: fechaFmt, turno, telefono1: limpiarTel(telefono1), telefono2: limpiarTel(telefono2), estado: "abierto", rival1: "", rival2: "" }
     // Guardado CONFIRMADO: manda y verifica que el desafío quedó en la planilla.
     const res = await guardarConfirmado(
       DESAFIOS_URL,
@@ -297,7 +297,7 @@ export default function DesafiosPage() {
     const mio1 = rival1.trim().toLowerCase()
     const res = await guardarConfirmado(
       DESAFIOS_URL,
-      { action: "aceptar", id: d.id, rival1, rival2, rivalTel1, rivalTel2 },
+      { action: "aceptar", id: d.id, rival1, rival2, rivalTel1: limpiarTel(rivalTel1), rivalTel2: limpiarTel(rivalTel2) },
       (filas) => filas.some((x: any) =>
         String(x.id) === String(d.id) &&
         String(x.estado) === "completo" &&

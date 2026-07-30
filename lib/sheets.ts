@@ -102,6 +102,13 @@ export async function leerFilas(url: string): Promise<any[]> {
   }
 }
 
+// Limpia un teléfono ANTES de guardarlo en la planilla: saca un "+" o "=" inicial,
+// porque Google Sheets interpreta un valor que empieza con "+"/"=" como FÓRMULA y lo
+// rompe (queda "#ERROR!"). Ej: "+54 9 11 3607-3033" → "54 9 11 3607-3033".
+export function limpiarTel(t: string | number): string {
+  return String(t ?? "").trim().replace(/^[+=]+/, "")
+}
+
 // Normaliza un teléfono argentino a formato wa.me (54 9 <área> <número>), para que
 // los links de WhatsApp abran el chat aunque el jugador lo escriba con espacios,
 // guiones, el 0 de área o el 15. Si no puede normalizar con confianza, devuelve los
