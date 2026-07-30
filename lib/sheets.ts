@@ -67,6 +67,29 @@ export async function guardarConfirmado(
   return ok ? "ok" : "error"
 }
 
+// POST + verifica que el registro DESAPARECIÓ (para bajas/cancelaciones). Devuelve
+// "ok" solo cuando la fila ya no está en la planilla; "error" si no se pudo confirmar.
+export async function bajaConfirmada(
+  url: string,
+  body: Record<string, unknown>,
+  sigueExistiendo: (filas: any[]) => boolean,
+  opts: { intentos?: number; esperaMs?: number } = {},
+): Promise<ResultadoGuardado> {
+  await enviarPost(url, body)
+  const { intentos = 4, esperaMs = 1500 } = opts
+  for (let i = 0; i < intentos; i++) {
+    await espera(esperaMs)
+    try {
+      const res = await fetch(url, { cache: "no-store" })
+      const data = await res.json()
+      if (Array.isArray(data) && !sigueExistiendo(data)) return "ok"
+    } catch {
+      /* reintentar */
+    }
+  }
+  return "error"
+}
+
 // Relee la planilla y devuelve las filas (o [] si falla). Útil para re-chequear
 // turnos ocupados justo antes de confirmar (anti doble-reserva).
 export async function leerFilas(url: string): Promise<any[]> {

@@ -389,13 +389,13 @@ export function PaletaSection() {
                 <CheckCircle2 size={34} color={C.amarillo} />
               </div>
               <h3 style={{ fontFamily: oswald, fontSize: 26, fontWeight: 700, textTransform: "uppercase", color: C.blanco, marginBottom: 12 }}>¡Quedaste anotado!</h3>
-              <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 420, margin: "0 auto 16px" }}>
-                Tu disponibilidad se registró. Dani te va a contactar para coordinar el partido.
-              </p>
-              <p style={{ fontFamily: inter, fontSize: 12.5, color: C.grisTenue, lineHeight: 1.6, maxWidth: 400, margin: "0 auto 26px" }}>
-                Si en un rato no te contactan, volvé a anotarte por las dudas.
+              <p style={{ fontFamily: inter, fontSize: 15, color: C.gris, lineHeight: 1.7, maxWidth: 420, margin: "0 auto 26px" }}>
+                Tu disponibilidad quedó registrada. Dani te va a contactar para coordinar el partido.
               </p>
               <button onClick={resetForm} style={{ fontFamily: oswald, fontSize: 14, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "12px 28px", borderRadius: 8 }}>Anotar otro jugador</button>
+              <p style={{ fontFamily: inter, fontSize: 12.5, color: C.grisTenue, lineHeight: 1.6, marginTop: 20 }}>
+                ¿Te equivocaste o no vas a poder ir? <a href="/mis-turnos" style={{ color: C.amarillo, textDecoration: "underline" }}>Ver o cancelar mis turnos</a>
+              </p>
             </div>
           ) : (
           <>
@@ -570,9 +570,14 @@ function Footer() {
 
         <div style={{ paddingTop: 26, borderTop: `1px solid ${C.cardBorde}`, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 14 }}>
           <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, margin: 0 }}>© 2026 Trinquete Maldonado. Todos los derechos reservados.</p>
-          <a href="/panel" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 12, color: C.grisTenue, textDecoration: "none", letterSpacing: "0.02em" }}>
-            🔒 Panel de Dani
-          </a>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+            <a href="/mis-turnos" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 12, color: C.grisTenue, textDecoration: "none", letterSpacing: "0.02em" }}>
+              📅 Mis turnos
+            </a>
+            <a href="/panel" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: inter, fontSize: 12, color: C.grisTenue, textDecoration: "none", letterSpacing: "0.02em" }}>
+              🔒 Panel de Dani
+            </a>
+          </div>
         </div>
       </div>
     </footer>
