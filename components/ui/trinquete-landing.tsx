@@ -130,6 +130,7 @@ const servicios = [
     desc: "Vestuarios amplios para hombres y mujeres, pensados para tu comodidad después de entrenar.",
     items: ["Duchas individuales divididas", "Agua caliente y fría", "Hombres y mujeres"],
     precio: "Incluido",
+    sinBoton: true,
   },
 ]
 
@@ -195,9 +196,11 @@ function ServiciosSection({ onAnotarse }: { onAnotarse: () => void }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 18, borderTop: `1px solid ${C.cardBorde}` }}>
                   <span style={{ fontFamily: oswald, fontSize: 20, fontWeight: 600, color: s.color === C.amarillo ? C.amarillo : "#fff" }}>{s.precio}</span>
-                  <button onClick={() => s.destacado ? onAnotarse() : scrollTo("contacto")} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: inter, fontSize: 13, fontWeight: 600, color: C.gris }}>
-                    {s.destacado ? "Anotarme" : "Consultar"} <ChevronRight size={15} />
-                  </button>
+                  {!s.sinBoton && (
+                    <button onClick={() => s.destacado ? onAnotarse() : scrollTo("contacto")} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", fontFamily: inter, fontSize: 13, fontWeight: 600, color: C.gris }}>
+                      {s.destacado ? "Anotarme" : "Consultar"} <ChevronRight size={15} />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )
@@ -253,6 +256,11 @@ function ArmadoSection() {
               </motion.div>
             )
           })}
+        </div>
+        <div style={{ textAlign: "center", marginTop: 26 }}>
+          <a href="/mis-turnos" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: oswald, fontSize: 14, letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600, color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "12px 22px", borderRadius: 8, textDecoration: "none" }}>
+            📅 Ver o cancelar mis turnos
+          </a>
         </div>
       </div>
     </section>
