@@ -100,7 +100,8 @@ export default function PanelPage() {
   const [error, setError] = useState(false)
   const [seleccion, setSeleccion] = useState<Record<string, Jugador>>({})
   const [copiado, setCopiado] = useState(false)
-  const [confirmando, setConfirmando] = useState(false)
+  const [avisando, setAvisando] = useState(false)                       // paso de avisar 1x1
+  const [avisados, setAvisados] = useState<Record<string, boolean>>({}) // qué jugadores ya avisó
   const [procesando, setProcesando] = useState(false)
   const [reservados, setReservados] = useState<Set<string>>(new Set())
 
@@ -216,6 +217,13 @@ export default function PanelPage() {
     const lineas = seleccionados.map(p => `• ${p.nombre} (${p.posicion})`).join("\n")
     return `🎾 ¡Partido armado!\n\n${fechaCompleta(b.fechaJugar)}\nHorario: ${b.turno}\nCategoría: ${b.categoria}\n\nJugadores:\n${lineas}`
   })()
+  // Mensaje personalizado para avisarle a UN jugador (le dice con quién juega, sin repetirlo a él)
+  const mensajePara = (j: Jugador) => {
+    const b = seleccionados[0]
+    const otros = seleccionados.filter(p => p.key !== j.key).map(p => p.nombre)
+    const conQuien = otros.length ? `👥 Jugás con: ${otros.join(", ")}\n` : ""
+    return `🎾 ¡Se armó tu partido de pelota paleta!\n\n📅 ${fechaCompleta(b.fechaJugar)}\n🕐 ${b.turno}\n${conQuien}📍 Cancha del Trinquete. ¡Te esperamos!`
+  }
   const copiar = () => {
     if (!mensajeArmado) return
     navigator.clipboard?.writeText(mensajeArmado).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2500) }).catch(() => {})
@@ -224,17 +232,11 @@ export default function PanelPage() {
   const quitarDeLaPlanilla = (jugadores: Jugador[]) => {
     enviarPost(SHEET_URL, { action: "quitar", jugadores: jugadores.map(j => ({ nombre: j.nombre, telefono: j.telefono })) })
   }
-  // Abre WhatsApp con el partido armado, pero NO borra todavía: primero pide confirmar el envío
-  const enviarWA = () => {
-    if (!seleccionados.length) return
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensajeArmado)}`, "_blank")
-    setConfirmando(true)
-  }
-  // Recién acá se borran (cuando Dani confirma que efectivamente lo mandó)
+  // Recién acá se borran (cuando Dani confirma que efectivamente avisó)
   const confirmarEnviado = async () => {
     const armados = seleccionados
     const base = armados[0]
-    if (!base) { setConfirmando(false); return }
+    if (!base) { setAvisando(false); return }
     setProcesando(true)
     const fResv = fechaDMY(base.fechaJugar)
     const clave = `${fResv}|${String(base.turno).trim()}`
@@ -243,7 +245,7 @@ export default function PanelPage() {
     const tomado = reservasAhora.some((r: any) => `${fechaDMY(r.fecha)}|${String(r.turno).trim()}` === clave)
     if (tomado) {
       setReservados(new Set(reservasAhora.map((r: any) => `${fechaDMY(r.fecha)}|${String(r.turno).trim()}`)))
-      setProcesando(false); setConfirmando(false)
+      setProcesando(false); setAvisando(false)
       alert("Ojo: ese turno ya figura reservado (quizás por un desafío). No armé el partido para no pisar la cancha; revisá la Agenda de turnos.")
       return
     }
@@ -266,7 +268,8 @@ export default function PanelPage() {
     setAnotados(prev => prev.filter(a => !fuera[`${a.nombre}__${a.telefono}`]))
     setSeleccion({})
     setProcesando(false)
-    setConfirmando(false)
+    setAvisando(false)
+    setAvisados({})
   }
 
   // Liberar un turno reservado (si el partido se canceló)
@@ -486,18 +489,34 @@ export default function PanelPage() {
       {seleccionados.length > 0 && (
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, background: "#0d0d0d", borderTop: `2px solid ${C.amarillo}`, padding: isMobile ? "12px 16px" : "14px 24px" }}>
           <div style={{ maxWidth: 820, margin: "0 auto" }}>
-            {confirmando ? (
-              /* Paso de confirmación: recién acá se borran, si Dani confirma que lo mandó */
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: inter, fontSize: 14, color: C.blanco, lineHeight: 1.4 }}>
-                  ¿Enviaste el mensaje por WhatsApp? Al confirmar, estos jugadores se quitan de la lista.
-                </span>
-                <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
-                  <button onClick={() => setConfirmando(false)} disabled={procesando} style={{ fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: procesando ? "default" : "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8, opacity: procesando ? 0.6 : 1 }}>
-                    No, volver
+            {avisando ? (
+              /* Paso AVISAR: un botón por jugador (WhatsApp con mensaje listo). Recién al final se arma. */
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: inter, fontSize: 13, color: C.gris, lineHeight: 1.4 }}>
+                    Tocá <strong style={{ color: C.blanco }}>Avisar</strong> a cada jugador (se abre su WhatsApp con el mensaje listo). Cuando avisaste a todos, tocá <strong style={{ color: C.blanco }}>Armar partido</strong>.
+                  </span>
+                  <button onClick={() => setAvisando(false)} disabled={procesando} style={{ fontFamily: oswald, fontSize: 13, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "none", border: "none", textDecoration: "underline" }}>← Volver</button>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  {seleccionados.map(j => {
+                    const listo = !!avisados[j.key]
+                    return (
+                      <a key={j.key} href={`https://wa.me/${telefonoWa(j.telefono)}?text=${encodeURIComponent(mensajePara(j))}`} target="_blank" rel="noopener noreferrer"
+                        onClick={() => setAvisados(p => ({ ...p, [j.key]: true }))}
+                        style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 13.5, fontWeight: 700, textTransform: "uppercase", textDecoration: "none",
+                          color: listo ? C.verde : C.negro, background: listo ? "transparent" : C.amarillo, border: `1.5px solid ${listo ? C.verde : C.amarillo}`, padding: "10px 14px", borderRadius: 8 }}>
+                        {listo ? <Check size={14} color={C.verde} /> : <Send size={14} />} {listo ? `${j.nombre} ✓` : `Avisar a ${j.nombre}`}
+                      </a>
+                    )
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                  <button onClick={copiar} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 13, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.gris, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "10px 14px", borderRadius: 8 }}>
+                    {copiado ? <><Check size={14} color={C.verde} /> Copiado</> : <><Copy size={14} /> Copiar (grupo)</>}
                   </button>
                   <button onClick={confirmarEnviado} disabled={procesando} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: procesando ? "default" : "pointer", color: C.negro, background: C.verde, border: "none", padding: "11px 18px", borderRadius: 8, opacity: procesando ? 0.7 : 1 }}>
-                    <Check size={15} /> {procesando ? "Confirmando…" : "Sí, lo mandé"}
+                    <Check size={15} /> {procesando ? "Armando…" : "Listo, armar partido"}
                   </button>
                 </div>
               </div>
@@ -511,8 +530,8 @@ export default function PanelPage() {
                   <button onClick={copiar} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 600, cursor: "pointer", color: C.blanco, background: "transparent", border: `1.5px solid ${C.cardBorde}`, padding: "11px 16px", borderRadius: 8 }}>
                     {copiado ? <><Check size={15} color={C.verde} /> Copiado</> : <><Copy size={15} /> Copiar</>}
                   </button>
-                  <button onClick={enviarWA} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 18px", borderRadius: 8 }}>
-                    <Send size={15} /> Enviar
+                  <button onClick={() => { setAvisados({}); setAvisando(true) }} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: oswald, fontSize: 14, textTransform: "uppercase", fontWeight: 700, cursor: "pointer", color: C.negro, background: C.amarillo, border: "none", padding: "11px 18px", borderRadius: 8 }}>
+                    <Send size={15} /> Avisar jugadores
                   </button>
                 </div>
               </div>
