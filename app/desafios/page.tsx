@@ -292,15 +292,29 @@ export default function DesafiosPage() {
       cargarReservas()
       return
     }
-    // Guardado CONFIRMADO: marcar el desafío como completo y verificar que quedó.
+    // Guardado CONFIRMADO: el desafío debe quedar completo CON NUESTROS rivales.
+    // (Si otra dupla ganó la carrera, quedará completo pero con SUS nombres → no matchea.)
+    const mio1 = rival1.trim().toLowerCase()
     const res = await guardarConfirmado(
       DESAFIOS_URL,
       { action: "aceptar", id: d.id, rival1, rival2, rivalTel1, rivalTel2 },
-      (filas) => filas.some((x: any) => String(x.id) === String(d.id) && String(x.estado) === "completo"),
+      (filas) => filas.some((x: any) =>
+        String(x.id) === String(d.id) &&
+        String(x.estado) === "completo" &&
+        String(x.rival1 || "").trim().toLowerCase() === mio1
+      ),
     )
     if (res !== "ok") {
+      // ¿Quedó completo pero con otra dupla? → nos ganaron de mano.
+      const ahora = await leerFilas(DESAFIOS_URL)
+      const tomadoPorOtro = ahora.some((x: any) => String(x.id) === String(d.id) && String(x.estado) === "completo")
       setProcesandoAceptar(false)
-      setErrorAceptar("No pudimos confirmar el partido (puede ser la conexión). Reintentá en unos segundos.")
+      if (tomadoPorOtro) {
+        setErrorAceptar("Otra dupla aceptó este desafío justo antes que vos. Elegí otro.")
+        cargarDesafios(); cargarReservas()
+      } else {
+        setErrorAceptar("No pudimos confirmar el partido (puede ser la conexión). Reintentá en unos segundos.")
+      }
       return
     }
     // Reservar el turno (confirmado). Si la reserva no se confirmara, el partido igual
