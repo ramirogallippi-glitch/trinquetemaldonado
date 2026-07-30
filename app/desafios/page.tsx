@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Swords, Calendar, Clock, Trophy, Plus, X, Send, Trash2, Check } from "lucide-react"
-import { guardarConfirmado, leerFilas, fechaVencida } from "@/lib/sheets"
+import { guardarConfirmado, leerFilas, fechaVencida, turnoYaPaso, enviarPost } from "@/lib/sheets"
 
 /* ── Paleta ── */
 const C = {
@@ -106,20 +106,12 @@ export default function DesafiosPage() {
   const liberarReservaDe = (d: Desafio) => {
     if (d.estado !== "completo") return
     const f = formatFecha(d.fecha)
-    fetch(RESERVAS_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "liberar", fecha: f, turno: d.turno }),
-    }).catch(() => {})
+    enviarPost(RESERVAS_URL, { action: "liberar", fecha: f, turno: d.turno })
     setReservados(prev => { const n = new Set(prev); n.delete(`${f}|${String(d.turno).trim()}`); return n })
   }
   const borrarDesafio = (d: Desafio) => {
     if (!window.confirm(`¿Borrar el partido de ${d.jugador1} y ${d.jugador2}? No se puede deshacer.`)) return
-    fetch(DESAFIOS_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "borrar", id: d.id }),
-    }).catch(() => {})
+    enviarPost(DESAFIOS_URL, { action: "borrar", id: d.id })
     liberarReservaDe(d)   // si tenía cancha reservada, la libera para que no quede huérfana
     setDesafios(prev => prev.filter(x => x.id !== d.id))
   }
@@ -127,11 +119,7 @@ export default function DesafiosPage() {
     if (!desafios.length) return
     if (!window.confirm(`¿Borrar TODOS los partidos (${desafios.length})? No se puede deshacer.`)) return
     desafios.forEach(d => {
-      fetch(DESAFIOS_URL, {
-        method: "POST", mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "borrar", id: d.id }),
-      }).catch(() => {})
+      enviarPost(DESAFIOS_URL, { action: "borrar", id: d.id })
       liberarReservaDe(d)   // libera la cancha de los que estaban completos
     })
     setDesafios([])
@@ -200,6 +188,14 @@ export default function DesafiosPage() {
       setError("Completá los dos jugadores con sus teléfonos, categoría, fecha y turno.")
       return
     }
+    if (String(telefono1).replace(/\D/g, "").length < 8 || String(telefono2).replace(/\D/g, "").length < 8) {
+      setError("Poné los teléfonos reales y completos, con característica (ej: 11 6453-3959). Es a donde Dani avisa del partido.")
+      return
+    }
+    if (turnoYaPaso(fecha, turno)) {
+      setError("Ese turno de hoy ya empezó. Elegí un horario más tarde u otro día.")
+      return
+    }
     const fechaFmt = fecha.split("-").reverse().join("/")
     setError("")
     setEnviando(true)
@@ -250,6 +246,10 @@ export default function DesafiosPage() {
   const abrirWhatsAppAceptar = (d: Desafio) => {
     if (!rival1.trim() || !rival2.trim() || !rivalTel1.trim() || !rivalTel2.trim()) {
       setErrorAceptar("Completá el nombre y el teléfono de los dos jugadores de tu dupla.")
+      return
+    }
+    if (String(rivalTel1).replace(/\D/g, "").length < 8 || String(rivalTel2).replace(/\D/g, "").length < 8) {
+      setErrorAceptar("Poné los teléfonos reales y completos, con característica (ej: 11 6453-3959). Es a donde Dani avisa del partido.")
       return
     }
     if (!puedeAceptar(d)) return
@@ -430,12 +430,18 @@ export default function DesafiosPage() {
 
             <label style={{ display: "block", fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>Turno</label>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 8, marginBottom: 18 }}>
-              {TURNOS.map(t => (
-                <button key={t} onClick={() => setTurno(t)} style={{ ...chip(turno === t), fontFamily: oswald, fontWeight: 600, whiteSpace: "nowrap" }}>{t}</button>
-              ))}
+              {TURNOS.map(t => {
+                const pasado = turnoYaPaso(fecha, t)
+                return (
+                  <button key={t} disabled={pasado} onClick={() => { if (!pasado) setTurno(t) }}
+                    title={pasado ? "Este turno de hoy ya empezó" : undefined}
+                    style={{ ...chip(turno === t), fontFamily: oswald, fontWeight: 600, whiteSpace: "nowrap", opacity: pasado ? 0.4 : 1, cursor: pasado ? "not-allowed" : "pointer", textDecoration: pasado ? "line-through" : "none" }}>{t}</button>
+                )
+              })}
             </div>
 
-            <label style={{ display: "block", fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 8 }}>Teléfono de cada jugador</label>
+            <label style={{ display: "block", fontFamily: oswald, fontSize: 14, textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Teléfono de cada jugador</label>
+            <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 8 }}>Números reales y completos, con característica (ej: 11 6453-3959). Son a donde Dani avisa del partido.</p>
             <input value={telefono1} onChange={e => setTelefono1(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${j1 || "Jugador 1"}`} style={inputStyle} />
             <input value={telefono2} onChange={e => setTelefono2(e.target.value)} type="tel" inputMode="tel" placeholder={`Teléfono de ${j2 || "Jugador 2"}`} style={{ ...inputStyle, marginBottom: 22 }} />
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Users, Calendar, Clock, RefreshCw, Copy, Send, Check, ShieldCheck } from "lucide-react"
-import { guardarConfirmado, leerFilas, telefonoWa } from "@/lib/sheets"
+import { guardarConfirmado, leerFilas, telefonoWa, enviarPost } from "@/lib/sheets"
 
 /* ── Paleta ── */
 const C = {
@@ -222,11 +222,7 @@ export default function PanelPage() {
   }
   // Borra los jugadores armados de la planilla de Google
   const quitarDeLaPlanilla = (jugadores: Jugador[]) => {
-    fetch(SHEET_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "quitar", jugadores: jugadores.map(j => ({ nombre: j.nombre, telefono: j.telefono })) }),
-    }).catch(() => {})
+    enviarPost(SHEET_URL, { action: "quitar", jugadores: jugadores.map(j => ({ nombre: j.nombre, telefono: j.telefono })) })
   }
   // Abre WhatsApp con el partido armado, pero NO borra todavía: primero pide confirmar el envío
   const enviarWA = () => {
@@ -277,11 +273,7 @@ export default function PanelPage() {
   const liberarTurno = (fechaJugar: string, turno: string) => {
     if (!confirm("¿Liberar este turno? Va a quedar disponible de nuevo para armar o desafiar.")) return
     const f = fechaDMY(fechaJugar)
-    fetch(RESERVAS_URL, {
-      method: "POST", mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "liberar", fecha: f, turno }),
-    }).catch(() => {})
+    enviarPost(RESERVAS_URL, { action: "liberar", fecha: f, turno })
     setReservados(prev => { const n = new Set(prev); n.delete(`${f}|${String(turno).trim()}`); return n })
   }
 

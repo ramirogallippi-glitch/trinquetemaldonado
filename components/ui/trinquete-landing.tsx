@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { HeroGeometric } from "./shape-landing-hero"
 import { Marquee } from "./marquee"
-import { guardarConfirmado, leerFilas } from "@/lib/sheets"
+import { guardarConfirmado, leerFilas, turnoYaPaso } from "@/lib/sheets"
 import {
   Dumbbell, Bike, Target, MapPin, Phone, AtSign,
   CheckCircle2, ChevronRight, Send, Droplets, Swords, UserPlus,
@@ -306,6 +306,15 @@ export function PaletaSection() {
       setError("Completá tu nombre, teléfono, posición, categoría, la fecha y al menos un turno.")
       return
     }
+    if (String(telefono).replace(/\D/g, "").length < 8) {
+      setError("Poné tu número real y completo, con característica (ej: 11 6453-3959). Es a donde te van a avisar del partido.")
+      return
+    }
+    const turnosPasados = turnos.filter(t => turnoYaPaso(fecha, t))
+    if (turnosPasados.length > 0) {
+      setError(`El turno ${turnosPasados.join(", ")} de hoy ya empezó. Elegí un horario más tarde u otro día.`)
+      return
+    }
     const fechaFmt = fecha.split("-").reverse().join("/")
     setError("")
     setEnviando(true)
@@ -396,7 +405,8 @@ export function PaletaSection() {
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26 }} />
 
           {/* Teléfono */}
-          <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 10 }}>Tu teléfono</label>
+          <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Tu teléfono</label>
+          <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 10 }}>Poné tu número <strong style={{ color: C.gris }}>real y completo, con característica</strong> (ej: 11 6453-3959). Es a donde Dani te avisa del partido.</p>
           <input value={telefono} onChange={e => setTelefono(e.target.value)} type="tel" inputMode="tel" placeholder="Ej: 11 6453-3959"
             style={{ width: "100%", boxSizing: "border-box", fontFamily: inter, fontSize: 15, color: C.blanco, background: "#0d0d0d", border: `1.5px solid ${C.cardBorde}`, borderRadius: 9, padding: "13px 16px", outline: "none", marginBottom: 26 }} />
 
@@ -427,12 +437,16 @@ export function PaletaSection() {
           <label style={{ display: "block", fontFamily: oswald, fontSize: 15, letterSpacing: "0.05em", textTransform: "uppercase", color: C.blanco, marginBottom: 4 }}>Turnos disponibles</label>
           <p style={{ fontFamily: inter, fontSize: 12, color: C.grisTenue, marginBottom: 12 }}>Elegí los que te sirvan.</p>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 8, marginBottom: 28 }}>
-            {TURNOS.map(t => (
-              <button key={t} onClick={() => toggle(turnos, setTurnos, t)}
-                style={{ ...chip(turnos.includes(t)), padding: "13px 8px", fontSize: 14, textAlign: "center", fontFamily: oswald, fontWeight: 600, whiteSpace: "nowrap" }}>
-                {t}
-              </button>
-            ))}
+            {TURNOS.map(t => {
+              const pasado = turnoYaPaso(fecha, t)
+              return (
+                <button key={t} disabled={pasado} onClick={() => { if (!pasado) toggle(turnos, setTurnos, t) }}
+                  title={pasado ? "Este turno de hoy ya empezó" : undefined}
+                  style={{ ...chip(turnos.includes(t)), padding: "13px 8px", fontSize: 14, textAlign: "center", fontFamily: oswald, fontWeight: 600, whiteSpace: "nowrap", opacity: pasado ? 0.4 : 1, cursor: pasado ? "not-allowed" : "pointer", textDecoration: pasado ? "line-through" : "none" }}>
+                  {t}
+                </button>
+              )
+            })}
           </div>
 
           {error && <p style={{ fontFamily: inter, fontSize: 13, color: "#ff6b6b", marginBottom: 16, textAlign: "center" }}>{error}</p>}

@@ -10,16 +10,23 @@
 
 export type ResultadoGuardado = "ok" | "error"
 
+// Token compartido que se manda en cada guardado. El Apps Script rechaza los POST que
+// no lo traigan. OJO: vive en el código de la web (no es seguridad fuerte), pero evita
+// que cualquiera que encuentre la URL escriba en las planillas. Debe coincidir EXACTO
+// con el que valida el Apps Script.
+export const API_TOKEN = "trq_2026_9fK3xQ7mZ2pR"
+
 const espera = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
 // Envía el POST (fire-and-forget: no-cors no devuelve nada útil; la verificación decide).
-export async function enviarPost(url: string, body: unknown): Promise<void> {
+// Inyecta el token automáticamente en TODOS los guardados.
+export async function enviarPost(url: string, body: Record<string, unknown>): Promise<void> {
   try {
     await fetch(url, {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, token: API_TOKEN }),
     })
   } catch {
     /* no-cors no expone errores de red; la re-lectura posterior es la que confirma */
@@ -51,7 +58,7 @@ export async function verificarGuardado(
 // aparece realmente en la planilla; "error" si no se pudo confirmar.
 export async function guardarConfirmado(
   url: string,
-  body: unknown,
+  body: Record<string, unknown>,
   verificar: (filas: any[]) => boolean,
   opts?: { intentos?: number; esperaMs?: number },
 ): Promise<ResultadoGuardado> {
@@ -88,6 +95,23 @@ export function telefonoWa(telefono: string | number): string {
   // número local (sin país). Le anteponemos 549 (celular Argentina).
   // Nota: si el jugador NO puso la característica (ej. 11), no hay forma de adivinarla.
   return "549" + d
+}
+
+// ¿El turno de HOY ya empezó (o pasó)? Para no dejar anotarse/desafiar a un horario de
+// hoy que ya arrancó. `fechaISO` viene del <input type=date> ("YYYY-MM-DD");
+// `turno` es "HH:MM - HH:MM". Si la fecha no es hoy, nunca está pasado.
+export function turnoYaPaso(fechaISO: string, turno: string): boolean {
+  if (!fechaISO) return false
+  const [y, m, d] = fechaISO.split("-").map(Number)
+  if (!y || !m || !d) return false
+  const ahora = new Date()
+  const esHoy = ahora.getFullYear() === y && ahora.getMonth() + 1 === m && ahora.getDate() === d
+  if (!esHoy) return false
+  const ini = String(turno).split("-")[0].trim() // "17:30"
+  const [hh, mm] = ini.split(":").map(Number)
+  if (isNaN(hh)) return false
+  const inicio = new Date(y, m - 1, d, hh, mm || 0, 0, 0)
+  return ahora.getTime() >= inicio.getTime()
 }
 
 // ¿La fecha (DD/MM/YYYY o texto de fecha) ya pasó respecto de hoy? Usada para ocultar
